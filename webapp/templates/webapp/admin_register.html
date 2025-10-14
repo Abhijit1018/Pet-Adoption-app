@@ -1,0 +1,94 @@
+{% extends 'webapp/base.html' %}
+
+{% block title %}Admin Registration - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card border-warning">
+        <div class="card-header bg-warning text-dark">
+          <h2 class="mb-0"><i class="fas fa-shield-alt"></i> Admin Registration</h2>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info">
+            <strong>Note:</strong> Only 3 admin accounts can be created. You need a special admin code to register.
+          </div>
+          
+          <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+            
+            <div class="form-group mb-3">
+              <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+              {{ form.username }}
+              {% if form.username.errors %}
+                <div class="text-danger">{{ form.username.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label">Email</label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <div class="text-danger">{{ form.email.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="{{ form.admin_code.id_for_label }}" class="form-label">Admin Registration Code</label>
+              {{ form.admin_code }}
+              {% if form.admin_code.help_text %}
+                <small class="form-text text-muted">{{ form.admin_code.help_text }}</small>
+              {% endif %}
+              {% if form.admin_code.errors %}
+                <div class="text-danger">{{ form.admin_code.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+              {{ form.password1 }}
+              {% if form.password1.help_text %}
+                <small class="form-text text-muted">{{ form.password1.help_text }}</small>
+              {% endif %}
+              {% if form.password1.errors %}
+                <div class="text-danger">{{ form.password1.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+              {{ form.password2 }}
+              {% if form.password2.errors %}
+                <div class="text-danger">{{ form.password2.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <button type="submit" class="btn btn-warning btn-lg w-100">Create Admin Account</button>
+          </form>
+          
+          <div class="text-center mt-4">
+            <p><a href="{% url 'webapp:register' %}" class="text-decoration-none">Regular User Registration</a></p>
+            <p><a href="{% url 'webapp:login' %}" class="text-decoration-none">Login</a></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control, .form-select {
+    margin-bottom: 0;
+  }
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+</style>
+{% endblock %}

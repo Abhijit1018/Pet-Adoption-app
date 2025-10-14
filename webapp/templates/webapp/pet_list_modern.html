@@ -1,0 +1,195 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}{{ page_title }} - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        {# Header: show icon only for Found/Lost pages and place subtitle inline on wide screens #}
+        <div class="page-header d-flex align-items-center {% if page_title == 'Found Pets' %}header-found{% elif page_title == 'Lost Pets' %}header-lost{% endif %}">
+            {% if page_title == 'Found Pets' or page_title == 'Lost Pets' %}
+                <i class="fas fa-map-marker-alt header-icon me-2" aria-hidden="true" title="{{ page_title }}"></i>
+            {% endif %}
+            <h1 class="hero-title mb-0">{{ page_title }}</h1>
+            {# Subtitle appears inline on md+ and stacks on small screens #}
+            <p class="hero-subtitle ms-3 mb-0 d-none d-md-block"> 
+                {% if page_title == 'Pets Available for Adoption' %}
+                    Find your perfect companion and give a loving pet a forever home. Every adoption saves a life and makes room for another pet in need.
+                {% elif page_title == 'Lost Pets' %}
+                    Help reunite lost pets with their families. If you've seen any of these pets, please contact us immediately.
+                {% elif page_title == 'Found Pets' %}
+                    These pets have been found and are looking for their families. If you recognize any of them, please get in touch.
+                {% endif %}
+            </p>
+        </div>
+        {# Subtitle for small screens (keeps original behavior) #}
+        <p class="hero-subtitle mt-2 d-block d-md-none">
+            {% if page_title == 'Pets Available for Adoption' %}
+                Find your perfect companion and give a loving pet a forever home. Every adoption saves a life and makes room for another pet in need.
+            {% elif page_title == 'Lost Pets' %}
+                Help reunite lost pets with their families. If you've seen any of these pets, please contact us immediately.
+            {% elif page_title == 'Found Pets' %}
+                These pets have been found and are looking for their families. If you recognize any of them, please get in touch.
+            {% endif %}
+        </p>
+        {% if user.is_authenticated %}
+        <div class="hero-actions">
+            <a href="{% url 'webapp:add_pet' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Pet
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<div class="container">
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <h3 class="filter-title">
+            <i class="fas fa-filter"></i> Find Your Perfect Match
+        </h3>
+        <div class="filter-grid">
+            <div class="form-group">
+                <label for="name-filter" class="form-label">Name</label>
+                <input type="text" id="name-filter" class="form-control" placeholder="Search by name...">
+            </div>
+            <div class="form-group">
+                <label for="species-filter" class="form-label">Species</label>
+                <select id="species-filter" class="form-select">
+                    <option value="all">All Species</option>
+                    <option value="dog">Dogs</option>
+                    <option value="cat">Cats</option>
+                    <option value="rabbit">Rabbits</option>
+                    <option value="bird">Birds</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Pet Grid -->
+    <div class="pet-grid">
+        {% for pet in pets %}
+            <a href="{% url 'webapp:pet_detail' pet.id %}" class="pet-card" 
+               data-species="{{ pet.species }}" 
+               data-location="{{ pet.location }}" 
+               data-gender="{{ pet.gender }}">
+                
+                <div class="pet-image-container">
+                    {% if pet.image %}
+                        <img src="{{ pet.image.url }}" alt="{{ pet.name }}" class="pet-image">
+                    {% else %}
+                        <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop&auto=format" 
+                             alt="{{ pet.name }}" class="pet-image">
+                    {% endif %}
+                </div>
+                
+                <div class="pet-card-content">
+                    <h3 class="pet-name">{{ pet.name }}</h3>
+                    
+                    <div class="pet-details">
+                        <span class="pet-tag species">{{ pet.get_species_display }}</span>
+                        {% if pet.breed %}
+                            <span class="pet-tag">{{ pet.breed }}</span>
+                        {% endif %}
+                        {% if pet.age %}
+                            <span class="pet-tag">{{ pet.age }}</span>
+                        {% endif %}
+                        <span class="pet-tag status status-{{ pet.status }}">{{ pet.get_status_display }}</span>
+                    </div>
+                    
+                    {% if pet.description %}
+                        <p class="pet-description">{{ pet.description|truncatewords:20 }}</p>
+                    {% endif %}
+                    
+                    <div class="pet-location">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ pet.location }}</span>
+                    </div>
+                    
+                    <div class="pet-actions">
+                        <span class="btn btn-primary">
+                            <i class="fas fa-heart"></i>
+                            {% if pet.status == 'for_adoption' %}
+                                Adopt Me
+                            {% elif pet.status == 'lost' %}
+                                I Found This Pet
+                            {% elif pet.status == 'found' %}
+                                This Is My Pet
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+            </a>
+        {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-search fa-3x mb-4"></i>
+                <h3>No pets found</h3>
+                <p>
+                    {% if page_title == 'Pets Available for Adoption' %}
+                        There are currently no pets available for adoption.
+                    {% elif page_title == 'Lost Pets' %}
+                        There are currently no lost pets reported.
+                    {% elif page_title == 'Found Pets' %}
+                        There are currently no found pets reported.
+                    {% endif %}
+                    Check back later or help us by adding a pet listing.
+                </p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'webapp:add_pet' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Pet
+                </a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if pets %}
+    <div class="text-center mt-4">
+        <p class="text-muted">Showing {{ pets|length }} pet{{ pets|length|pluralize }}. 
+        <strong>Every pet deserves a loving home.</strong></p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.pet-image-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-actions {
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .hero-actions {
+        margin-top: 1.5rem;
+    }
+}
+</style>
+<style>
+/* Page header: icon + title horizontal layout */
+.page-header { display: flex; align-items: center; gap: 0.6rem; justify-content: flex-start; }
+.page-header .hero-title { font-size: 1.75rem; font-weight: 800; margin: 0; color: white; }
+.hero-subtitle { margin-top: 0.4rem; color: rgba(255,255,255,0.95); }
+
+/* Icon styling and scoped colors for Found/Lost */
+.header-icon { font-size: 1.15rem; display: inline-flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.95); }
+.header-found .header-icon { /* Found -> use secondary accent */
+    color: var(--secondary-foreground);
+}
+.header-lost .header-icon { /* Lost -> use accent (sky blue) */
+    color: var(--accent-foreground);
+}
+
+/* Allow subtitle inline on larger screens, stack on small screens */
+@media (max-width: 768px) {
+    .page-header { flex-direction: column; align-items: flex-start; gap: 0.25rem; }
+    .page-header .hero-title { font-size: 1.5rem; }
+    .hero-subtitle { margin-top: 0.4rem; }
+}
+</style>
+{% endblock %}

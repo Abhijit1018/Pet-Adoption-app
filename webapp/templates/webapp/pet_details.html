@@ -1,0 +1,252 @@
+{% extends 'webapp/base.html' %}
+
+{% block title %}{{ pet.name }} - Pet Details{% endblock %}
+
+{% block content %}
+    <div class="pet-detail-container">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="pet-detail-image">
+                    {% if pet.image %}
+                        <img src="{{ pet.image.url }}" alt="Photo of {{ pet.name }}" class="img-fluid rounded">
+                    {% else %}
+                        <div class="no-image-placeholder">
+                            <i class="fas fa-paw fa-5x text-muted"></i>
+                            <p>No photo available</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="pet-detail-info">
+                    <h1 class="mb-3">{{ pet.name }}</h1>
+                    
+                    <div class="pet-info-grid">
+                        <p><strong>Status:</strong> 
+                            <span class="badge badge-status-{{ pet.status }}">{{ pet.get_status_display }}</span>
+                            {% if pet.status == 'found' and days_remaining is not None %}
+                                <br><small class="text-warning">
+                                    {% if days_remaining > 0 %}
+                                        {{ days_remaining }} days remaining before moving to adoption
+                                    {% else %}
+                                        Will be moved to adoption soon
+                                    {% endif %}
+                                </small>
+                            {% endif %}
+                        </p>
+                        
+                        <p><strong>Species:</strong> {{ pet.get_species_display }}</p>
+                        
+                        {% if pet.breed %}
+                            <p><strong>Breed:</strong> {{ pet.breed }}</p>
+                        {% endif %}
+                        
+                        {% if pet.age %}
+                            <p><strong>Age:</strong> {{ pet.age }}</p>
+                        {% endif %}
+                        
+                        <p><strong>Gender:</strong> {{ pet.get_gender_display }}</p>
+                        
+                        {% if pet.color %}
+                            <p><strong>Color:</strong> {{ pet.color }}</p>
+                        {% endif %}
+                        
+                        <p><strong>Location:</strong> {{ pet.location }}</p>
+                        
+                        {% if pet.date_added %}
+                            <p><strong>Posted:</strong> {{ pet.date_added|date:"F j, Y" }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if pet.description %}
+                        <div class="mt-4">
+                            <h4>Description</h4>
+                            <p class="description-text">{{ pet.description|linebreaks }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    <hr>
+                    
+                    <div class="contact-info">
+                        <h4>Contact Information</h4>
+                        {% if pet.contact_email %}
+                            <p><strong>Email:</strong> <a href="mailto:{{ pet.contact_email }}">{{ pet.contact_email }}</a></p>
+                        {% endif %}
+                        {% if pet.contact_phone %}
+                            <p><strong>Phone:</strong> <a href="tel:{{ pet.contact_phone }}">{{ pet.contact_phone }}</a></p>
+                        {% endif %}
+                        {% if pet.owner %}
+                            <p><strong>Posted by:</strong> {{ pet.owner.username }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if pet.status == 'for_adoption' and user.is_authenticated and user != pet.owner %}
+                        <div class="mt-4">
+                            <a href="{% url 'webapp:request_adoption' pet.id %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-heart"></i> Request Adoption
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .pet-detail-container {
+            margin-top: 2rem;
+            padding: 1rem;
+        }
+        
+        .pet-detail-image {
+            margin-bottom: 2rem;
+        }
+        
+        .pet-detail-image img {
+            max-height: 500px;
+            object-fit: cover;
+            width: 100%;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .pet-detail-image img:hover {
+            transform: scale(1.02);
+        }
+        
+        .no-image-placeholder {
+            text-align: center;
+            padding: 4rem;
+            background-color: #f8f9fa;
+            border-radius: 15px;
+            border: 2px dashed #dee2e6;
+            transition: all 0.3s ease;
+        }
+        
+        .pet-detail-info {
+            padding: 1rem;
+        }
+        
+        .pet-detail-info h1 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+        }
+        
+        .pet-info-grid p {
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            border-radius: 8px;
+            background-color: rgba(0,123,255,0.05);
+            border-left: 4px solid #007bff;
+        }
+        
+        .pet-info-grid strong {
+            color: #495057;
+            min-width: 100px;
+            display: inline-block;
+        }
+        
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+        
+        .badge-status-for_adoption {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+        
+        .badge-status-lost {
+            background: linear-gradient(45deg, #dc3545, #e74c3c);
+            color: white;
+        }
+        
+        .badge-status-found {
+            background: linear-gradient(45deg, #ffc107, #f39c12);
+            color: #212529;
+        }
+        
+        .badge-status-adopted {
+            background: linear-gradient(45deg, #6f42c1, #8e44ad);
+            color: white;
+        }
+        
+        .description-text {
+            background-color: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 15px;
+            border-left: 5px solid #007bff;
+            margin: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            line-height: 1.6;
+        }
+        
+        .contact-info {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-top: 1.5rem;
+        }
+        
+        .contact-info h4 {
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .contact-info a {
+            color: #007bff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-info a:hover {
+            color: #0056b3;
+            text-decoration: underline;
+        }
+        
+        .btn-lg {
+            padding: 0.75rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        }
+        
+        .btn-lg:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,123,255,0.4);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .pet-detail-container {
+                padding: 0.5rem;
+            }
+            
+            .pet-detail-image {
+                margin-bottom: 1rem;
+            }
+            
+            .pet-detail-info {
+                padding: 0.5rem;
+            }
+            
+            .pet-detail-info h1 {
+                font-size: 1.8rem;
+            }
+            
+            .contact-info, .description-text {
+                padding: 1rem;
+            }
+        }
+    </style>
+{% endblock %}
+

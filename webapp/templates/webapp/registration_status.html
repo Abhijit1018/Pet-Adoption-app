@@ -1,0 +1,71 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}Registration Status{% endblock %}
+
+{% block extra_head %}
+<style>
+  .status-card { border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); }
+  .status-badge { font-weight: 600; padding: .35rem .75rem; border-radius: 9999px; }
+  .status-pending { background: #fff7ed; color: #7a4a00; }
+  .status-approved { background: #e6fffa; color: #065f46; }
+  .status-rejected { background: #ffe6e6; color: #7a0711; }
+  .muted-note { color: var(--muted-foreground); }
+  </style>
+{% endblock %}
+
+{% block content %}
+<!-- TEMPLATE: registration_status.html - updated: 2025-10-07 14:35:00 -->
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="d-flex align-items-center mb-3">
+        <h2 class="me-auto"><i class="fas fa-clipboard-list"></i> My Pet Registration Requests <span class="badge bg-danger ms-2">UPDATED</span></h2>
+        <a href="{% url 'webapp:register_pet_request' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Register New Pet</a>
+      </div>
+
+      {% if registrations %}
+        {% for registration in registrations %}
+        <div class="card status-card mb-3">
+          <div class="card-body">
+            <div class="d-flex align-items-start">
+              <div class="flex-grow-1">
+                <h5 class="mb-1">{{ registration.name }}</h5>
+                <div class="muted-note mb-2">
+                  <i class="fas fa-paw"></i> {{ registration.get_species_display }} &nbsp; • &nbsp; <i class="fas fa-venus-mars"></i> {{ registration.get_gender_display }} &nbsp; • &nbsp; <i class="fas fa-map-marker-alt"></i> {{ registration.location }}
+                </div>
+                {% if registration.description %}
+                  <p class="mb-2">{{ registration.description }}</p>
+                {% endif %}
+                {% if registration.admin_notes %}
+                  <div class="alert alert-secondary py-2">Admin Notes: {{ registration.admin_notes }}</div>
+                {% endif %}
+                <small class="muted-note">Submitted: {{ registration.created_at|date:"M j, Y g:i A" }}{% if registration.reviewed_at %} | Reviewed: {{ registration.reviewed_at|date:"M j, Y g:i A" }}{% endif %}</small>
+              </div>
+              <div class="text-end ms-3">
+                <div class="mb-2">
+                  <span class="status-badge {% if registration.status == 'pending' %}status-pending{% elif registration.status == 'approved' %}status-approved{% else %}status-rejected{% endif %}">
+                    {% if registration.status == 'pending' %}Pending{% elif registration.status == 'approved' %}Approved{% else %}Rejected{% endif %}
+                  </span>
+                </div>
+                {% if registration.status == 'approved' and registration.created_pet %}
+                  <a href="{% url 'webapp:pet_detail' registration.created_pet.id %}" class="btn btn-outline-primary btn-sm mt-2">View Live Pet Listing</a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="card p-4 text-center">
+          <h4>No Registration Requests Yet</h4>
+          <p class="muted-note">You haven't submitted any pet registration requests.</p>
+          <a href="{% url 'webapp:register_pet_request' %}" class="btn btn-primary mt-2">Submit Your First Request</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

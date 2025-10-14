@@ -1,0 +1,208 @@
+{% extends 'webapp/base.html' %}
+
+{% block title %}Admin Pet Management - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-paw"></i> Pet Management</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'webapp:admin_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+            <a href="{% url 'webapp:add_pet' %}" class="btn btn-primary">Add New Pet</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">All Pets ({{ pets|length }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Photo</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Species</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Location</th>
+                            <th>Owner</th>
+                            <th>Date Added</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pet in pets %}
+                        <tr id="pet-row-{{ pet.id }}">
+                            <td>
+                                {% if pet.image %}
+                                    <img src="{{ pet.image.url }}" alt="{{ pet.name }}" 
+                                         style="width: 40px; height: 40px; object-fit: cover; border-radius: 50%;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center" 
+                                         style="width: 40px; height: 40px;">
+                                        <i class="fas fa-paw text-white"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ pet.name }}</strong>
+                                {% if pet.breed %}
+                                    <br><small class="text-muted">{{ pet.breed }}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <select class="form-select form-select-sm status-select" data-pet-id="{{ pet.id }}">
+                                    {% for value, label in pet.STATUS_CHOICES %}
+                                        <option value="{{ value }}" {% if pet.status == value %}selected{% endif %}>
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>{{ pet.get_species_display }}</td>
+                            <td>{{ pet.age|default:"-" }}</td>
+                            <td>{{ pet.get_gender_display }}</td>
+                            <td>{{ pet.location }}</td>
+                            <td>
+                                {% if pet.owner %}
+                                    {{ pet.owner.username }}
+                                {% else %}
+                                    <span class="text-muted">None</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ pet.date_added|date:"M j, Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'webapp:pet_detail' pet.id %}" class="btn btn-outline-primary" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <button class="btn btn-outline-danger delete-pet" data-pet-id="{{ pet.id }}" title="Delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="fas fa-paw fa-2x text-muted mb-2"></i>
+                                <br>No pets found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle status changes
+    document.querySelectorAll('.status-select').forEach(function(select) {
+        select.addEventListener('change', function() {
+            const petId = this.dataset.petId;
+            const newStatus = this.value;
+            const originalStatus = this.querySelector('option[selected]').value;
+            
+            fetch(`/toggle-pet-status/${petId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value || getCookie('csrftoken')
+                },
+                body: `status=${newStatus}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the selected attribute
+                    this.querySelector(`option[value="${originalStatus}"]`).removeAttribute('selected');
+                    this.querySelector(`option[value="${newStatus}"]`).setAttribute('selected', 'selected');
+                    
+                    // Show success message
+                    showAlert('Pet status updated successfully!', 'success');
+                } else {
+                    // Revert the selection
+                    this.value = originalStatus;
+                    showAlert('Failed to update pet status.', 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.value = originalStatus;
+                showAlert('An error occurred while updating pet status.', 'danger');
+            });
+        });
+    });
+
+    // Handle pet deletion (placeholder - implement as needed)
+    document.querySelectorAll('.delete-pet').forEach(function(button) {
+        button.addEventListener('click', function() {
+            const petId = this.dataset.petId;
+            if (confirm('Are you sure you want to delete this pet? This action cannot be undone.')) {
+                // Implement delete functionality here
+                showAlert('Delete functionality not implemented yet.', 'warning');
+            }
+        });
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container-fluid');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+</script>
+
+<style>
+    .badge-status-for_adoption {
+        background-color: #28a745;
+    }
+    
+    .badge-status-lost {
+        background-color: #dc3545;
+    }
+    
+    .badge-status-found {
+        background-color: #ffc107;
+        color: #212529;
+    }
+    
+    .badge-status-adopted {
+        background-color: #6f42c1;
+    }
+</style>
+{% endblock %}

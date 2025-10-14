@@ -1,0 +1,350 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}{{ pet.name }} - Pet Detail - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Pet Image -->
+        <div class="col-lg-6">
+            <div class="pet-detail-image">
+                {% if pet.image %}
+                    <img src="{{ pet.image.url }}" alt="{{ pet.name }}" class="img-fluid rounded">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=600&h=400&fit=crop&auto=format" 
+                         alt="{{ pet.name }}" class="img-fluid rounded">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pet Information -->
+        <div class="col-lg-6">
+            <div class="pet-detail-info">
+                <!-- Header -->
+                <div class="pet-detail-header mb-4">
+                    <h1 class="pet-detail-name">{{ pet.name }}</h1>
+                    <div class="pet-detail-status">
+                        <span class="status-badge status-{{ pet.status }}">
+                            {{ pet.get_status_display }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="pet-quick-stats mb-4">
+                    <div class="row">
+                        <div class="col-6 col-md-3">
+                            <div class="quick-stat">
+                                <i class="fas fa-paw text-primary"></i>
+                                <div class="stat-info">
+                                    <small class="text-muted">Species</small>
+                                    <div class="stat-value">{{ pet.get_species_display }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% if pet.breed %}
+                        <div class="col-6 col-md-3">
+                            <div class="quick-stat">
+                                <i class="fas fa-dna text-primary"></i>
+                                <div class="stat-info">
+                                    <small class="text-muted">Breed</small>
+                                    <div class="stat-value">{{ pet.breed }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if pet.age %}
+                        <div class="col-6 col-md-3">
+                            <div class="quick-stat">
+                                <i class="fas fa-birthday-cake text-primary"></i>
+                                <div class="stat-info">
+                                    <small class="text-muted">Age</small>
+                                    <div class="stat-value">{{ pet.age }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <div class="col-6 col-md-3">
+                            <div class="quick-stat">
+                                <i class="fas fa-venus-mars text-primary"></i>
+                                <div class="stat-info">
+                                    <small class="text-muted">Gender</small>
+                                    <div class="stat-value">{{ pet.get_gender_display|capfirst }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Location -->
+                <div class="pet-location mb-4">
+                    <h3><i class="fas fa-map-marker-alt text-primary"></i> Location</h3>
+                    <p class="location-text">{{ pet.location }}</p>
+                </div>
+
+                <!-- Description -->
+                {% if pet.description %}
+                <div class="pet-description mb-4">
+                    <h3><i class="fas fa-info-circle text-primary"></i> About {{ pet.name }}</h3>
+                    <p>{{ pet.description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- Contact Information -->
+                {% if pet.contact_email or pet.contact_phone %}
+                <div class="pet-contact mb-4">
+                    <h3><i class="fas fa-phone text-primary"></i> Contact Information</h3>
+                    {% if pet.contact_email %}
+                        <p><strong>Email:</strong> 
+                            <a href="mailto:{{ pet.contact_email }}">{{ pet.contact_email }}</a>
+                        </p>
+                    {% endif %}
+                    {% if pet.contact_phone %}
+                        <p><strong>Phone:</strong> 
+                            <a href="tel:{{ pet.contact_phone }}">{{ pet.contact_phone }}</a>
+                        </p>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Additional Info -->
+                <div class="pet-additional-info mb-4">
+                    {% if pet.color %}
+                        <div class="info-item">
+                            <strong>Color:</strong> {{ pet.color }}
+                        </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <strong>Listed on:</strong> {{ pet.date_added|date:"F d, Y" }}
+                    </div>
+                    {% if pet.found_date and pet.status == 'found' %}
+                        <div class="info-item">
+                            <strong>Found on:</strong> {{ pet.found_date|date:"F d, Y" }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="pet-actions">
+                    {% if user.is_authenticated %}
+                        {% if pet.status == 'for_adoption' and pet.owner != user %}
+                            <a href="{% url 'webapp:request_adoption' pet.id %}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-heart"></i> Request Adoption
+                            </a>
+                        {% elif pet.status == 'lost' %}
+                            <button class="btn btn-success btn-lg" onclick="contactOwner()">
+                                <i class="fas fa-phone"></i> I Found This Pet!
+                            </button>
+                        {% elif pet.status == 'found' %}
+                            <button class="btn btn-accent btn-lg" onclick="contactOwner()">
+                                <i class="fas fa-user"></i> This Is My Pet!
+                            </button>
+                        {% endif %}
+                        
+                        {% if pet.owner == user %}
+                            <a href="{% url 'webapp:dashboard' %}" class="btn btn-secondary">
+                                <i class="fas fa-edit"></i> Manage Listing
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <div class="auth-prompt">
+                            <p class="mb-3">Please log in to interact with this pet listing.</p>
+                            <a href="{% url 'webapp:login' %}" class="btn btn-primary">
+                                <i class="fas fa-sign-in-alt"></i> Log In
+                            </a>
+                            <a href="{% url 'webapp:register' %}" class="btn btn-secondary">
+                                <i class="fas fa-user-plus"></i> Sign Up
+                            </a>
+                        </div>
+                    {% endif %}
+                    
+                    <a href="javascript:history.back()" class="btn btn-ghost">
+                        <i class="fas fa-arrow-left"></i> Go Back
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Similar Pets Section -->
+    {% if similar_pets %}
+    <div class="similar-pets-section mt-5">
+        <h2 class="text-center mb-4">Other Pets You Might Like</h2>
+        <div class="pet-grid">
+            {% for similar_pet in similar_pets %}
+                <a href="{% url 'webapp:pet_detail' similar_pet.id %}" class="pet-card">
+                    <div class="pet-image-container">
+                        {% if similar_pet.image %}
+                            <img src="{{ similar_pet.image.url }}" alt="{{ similar_pet.name }}" class="pet-image">
+                        {% else %}
+                            <img src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=400&h=300&fit=crop&auto=format" 
+                                 alt="{{ similar_pet.name }}" class="pet-image">
+                        {% endif %}
+                    </div>
+                    <div class="pet-card-content">
+                        <h4 class="pet-name">{{ similar_pet.name }}</h4>
+                        <div class="pet-details">
+                            <span class="pet-tag species">{{ similar_pet.get_species_display }}</span>
+                            <span class="pet-tag status status-{{ similar_pet.status }}">{{ similar_pet.get_status_display }}</span>
+                        </div>
+                        <div class="pet-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ similar_pet.location }}</span>
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.pet-detail-image {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+.pet-detail-image img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    box-shadow: var(--shadow-medium);
+}
+
+.pet-detail-info {
+    padding: 1rem 0;
+}
+
+.pet-detail-header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+}
+
+.pet-detail-name {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--foreground);
+}
+
+.pet-detail-status {
+    margin-bottom: 1rem;
+}
+
+.quick-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.quick-stat i {
+    font-size: 1.25rem;
+    width: 24px;
+    text-align: center;
+}
+
+.stat-info small {
+    display: block;
+    font-size: 0.75rem;
+}
+
+.stat-value {
+    font-weight: 600;
+    font-size: 0.875rem;
+}
+
+.pet-location h3,
+.pet-description h3,
+.pet-contact h3 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.location-text {
+    font-size: 1.125rem;
+    color: var(--muted-foreground);
+}
+
+.info-item {
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.pet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.auth-prompt {
+    background: var(--muted);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+    margin-bottom: 1rem;
+}
+
+.similar-pets-section {
+    border-top: 1px solid var(--border);
+    padding-top: 3rem;
+}
+
+.btn-accent {
+    background: var(--accent);
+    color: var(--accent-foreground);
+}
+
+.btn-accent:hover {
+    background: hsl(200, 80%, 60%);
+    transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+    .pet-detail-name {
+        font-size: 2rem;
+    }
+    
+    .quick-stat {
+        padding: 0.75rem;
+    }
+    
+    .pet-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .pet-actions .btn {
+        text-align: center;
+    }
+}
+</style>
+
+<script>
+function contactOwner() {
+    {% if pet.contact_email or pet.contact_phone %}
+        const contactInfo = [];
+        {% if pet.contact_email %}
+            contactInfo.push('Email: {{ pet.contact_email }}');
+        {% endif %}
+        {% if pet.contact_phone %}
+            contactInfo.push('Phone: {{ pet.contact_phone }}');
+        {% endif %}
+        
+        alert('Contact Information:\n\n' + contactInfo.join('\n'));
+    {% else %}
+        alert('Please contact the site administrator for more information about this pet.');
+    {% endif %}
+}
+</script>
+{% endblock %}

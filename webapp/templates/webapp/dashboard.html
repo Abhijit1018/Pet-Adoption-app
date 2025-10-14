@@ -1,0 +1,233 @@
+{% extends 'webapp/base.html' %}
+
+{% block title %}Dashboard - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <!-- Welcome Section -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1>Welcome back, {{ user.username }}!</h1>
+      {% if user.userprofile %}
+        <p class="lead text-muted">
+          {{ user.userprofile.age }} years old • {{ user.userprofile.get_gender_display }} • {{ user.userprofile.location }}
+        </p>
+      {% endif %}
+    </div>
+    <div class="col-md-4 text-end">
+      <div class="btn-group" role="group">
+        <a href="{% url 'webapp:register_pet_request' %}" class="btn btn-primary">
+          <i class="fas fa-plus"></i> Register New Pet
+        </a>
+        <a href="{% url 'webapp:registration_status' %}" class="btn btn-info">
+          <i class="fas fa-clipboard-list"></i> My Requests
+        </a>
+        {% if user.adminprofile %}
+          <a href="{% url 'webapp:admin_dashboard' %}" class="btn btn-warning">
+            <i class="fas fa-shield-alt"></i> Admin
+          </a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Card -->
+  {% if user.userprofile %}
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-user"></i> Profile Information</h5>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <strong>Email:</strong> {{ user.email }}
+            </div>
+            <div class="col-md-3">
+              <strong>Phone:</strong> {{ user.userprofile.phone_number|default:"Not provided" }}
+            </div>
+            <div class="col-md-3">
+              <strong>Age:</strong> {{ user.userprofile.age|default:"Not provided" }}
+            </div>
+            <div class="col-md-3">
+              <strong>Member since:</strong> {{ user.date_joined|date:"M Y" }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+  <!-- Your Pets Section -->
+  <div class="row mb-4">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0"><i class="fas fa-paw"></i> Your Pets ({{ pets|length }})</h5>
+          <a href="{% url 'webapp:add_pet' %}" class="btn btn-outline-primary btn-sm">Add New Pet</a>
+        </div>
+        <div class="card-body">
+          {% if pets %}
+            <div class="row">
+              {% for pet in pets %}
+                <div class="col-md-4 mb-3">
+                  <div class="card h-100 shadow-sm">
+                    {% if pet.image %}
+                      <img src="{{ pet.image.url }}" class="card-img-top" alt="{{ pet.name }}" 
+                           style="height: 200px; object-fit: cover;">
+                    {% else %}
+                      <div class="card-img-top bg-light d-flex align-items-center justify-content-center" 
+                           style="height: 200px;">
+                        <i class="fas fa-paw fa-3x text-muted"></i>
+                      </div>
+                    {% endif %}
+                    <div class="card-body">
+                      <h5 class="card-title">{{ pet.name }}</h5>
+                      <p class="card-text">
+                        <strong>Species:</strong> {{ pet.get_species_display }}<br>
+                        {% if pet.breed %}<strong>Breed:</strong> {{ pet.breed }}<br>{% endif %}
+                        {% if pet.age %}<strong>Age:</strong> {{ pet.age }}<br>{% endif %}
+                        <strong>Gender:</strong> {{ pet.get_gender_display }}<br>
+                        <strong>Location:</strong> {{ pet.location }}
+                      </p>
+                      <p class="card-text">
+                        <span class="badge badge-status-{{ pet.status }}">{{ pet.get_status_display }}</span>
+                      </p>
+                      <a href="{% url 'webapp:pet_detail' pet.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-eye"></i> View Details
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="text-center py-4">
+              <i class="fas fa-paw fa-3x text-muted mb-3"></i>
+              <p class="text-muted">You haven't added any pets yet.</p>
+              <a href="{% url 'webapp:add_pet' %}" class="btn btn-primary">Add Your First Pet</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Adoption Requests Section -->
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-heart"></i> My Adoption Requests</h5>
+        </div>
+        <div class="card-body">
+          {% if my_requests %}
+            {% for req in my_requests %}
+              <div class="d-flex justify-content-between align-items-start mb-3 p-3 border rounded">
+                <div>
+                  <h6 class="mb-1">{{ req.pet.name }}</h6>
+                  <p class="mb-1 text-muted">{{ req.pet.get_species_display }} • {{ req.pet.location }}</p>
+                  <small class="text-muted">Requested on {{ req.created_at|date:"M j, Y" }}</small>
+                </div>
+                <div>
+                  <span class="badge 
+                    {% if req.status == 'pending' %}bg-warning{% endif %}
+                    {% if req.status == 'approved' %}bg-success{% endif %}
+                    {% if req.status == 'rejected' %}bg-danger{% endif %}">
+                    {{ req.status|capfirst }}
+                  </span>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-3">
+              <i class="fas fa-heart fa-2x text-muted mb-2"></i>
+              <p class="text-muted">You haven't made any adoption requests yet.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-inbox"></i> Incoming Requests</h5>
+        </div>
+        <div class="card-body">
+          {% if incoming_requests %}
+            {% for req in incoming_requests %}
+              <div class="border rounded p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div>
+                    <h6 class="mb-1">{{ req.user.username }} wants {{ req.pet.name }}</h6>
+                    <p class="mb-1 text-muted">{{ req.pet.get_species_display }} • {{ req.pet.location }}</p>
+                    <small class="text-muted">{{ req.created_at|date:"M j, Y" }}</small>
+                  </div>
+                  <span class="badge 
+                    {% if req.status == 'pending' %}bg-warning{% endif %}
+                    {% if req.status == 'approved' %}bg-success{% endif %}
+                    {% if req.status == 'rejected' %}bg-danger{% endif %}">
+                    {{ req.status|capfirst }}
+                  </span>
+                </div>
+                
+                {% if req.message %}
+                  <div class="mt-2">
+                    <small class="text-muted"><strong>Message:</strong></small>
+                    <p class="small">{{ req.message }}</p>
+                  </div>
+                {% endif %}
+                
+                {% if req.status == 'pending' %}
+                  <div class="mt-2">
+                    <a href="{% url 'webapp:manage_adoption_request' req.id 'approve' %}" 
+                       class="btn btn-success btn-sm me-2"
+                       onclick="return confirm('Are you sure you want to approve this adoption request?')">
+                      <i class="fas fa-check"></i> Approve
+                    </a>
+                    <a href="{% url 'webapp:manage_adoption_request' req.id 'reject' %}" 
+                       class="btn btn-outline-danger btn-sm"
+                       onclick="return confirm('Are you sure you want to reject this adoption request?')">
+                      <i class="fas fa-times"></i> Reject
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div class="text-center py-3">
+              <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+              <p class="text-muted">No incoming adoption requests.</p>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .badge-status-for_adoption {
+    background-color: #28a745;
+  }
+  
+  .badge-status-lost {
+    background-color: #dc3545;
+  }
+  
+  .badge-status-found {
+    background-color: #ffc107;
+    color: #212529;
+  }
+  
+  .badge-status-adopted {
+    background-color: #6f42c1;
+  }
+  
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(0, 0, 0, 0.125);
+  }
+</style>
+{% endblock %}

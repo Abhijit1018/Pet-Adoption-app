@@ -1,0 +1,748 @@
+/* Modern Pet Adoption Theme - Warm & Welcoming Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* Base Colors - Warm neutrals */
+  --background: hsl(35, 20%, 98%);
+  --foreground: hsl(25, 25%, 15%);
+
+  /* Card System - Soft whites with warm undertones */
+  --card: hsl(0, 0%, 100%);
+  --card-foreground: hsl(25, 25%, 15%);
+
+  /* Interactive Elements */
+  --popover: hsl(0, 0%, 100%);
+  --popover-foreground: hsl(25, 25%, 15%);
+
+  /* Primary - Warm coral/orange for pet adoption */
+  --primary: hsl(15, 85%, 60%);
+  --primary-foreground: hsl(0, 0%, 100%);
+  --primary-glow: hsl(15, 85%, 70%);
+
+  /* Secondary - Sage green for success/found pets */
+  --secondary: hsl(140, 40%, 75%);
+  --secondary-foreground: hsl(140, 60%, 20%);
+
+  /* Accent - Sky blue for lost pets */
+  --accent: hsl(200, 85%, 65%);
+  --accent-foreground: hsl(0, 0%, 100%);
+
+  /* Muted tones */
+  --muted: hsl(35, 15%, 92%);
+  --muted-foreground: hsl(25, 15%, 45%);
+
+  /* Status colors */
+  --success: hsl(140, 70%, 55%);
+  --success-foreground: hsl(0, 0%, 100%);
+  --warning: hsl(45, 90%, 60%);
+  --warning-foreground: hsl(25, 25%, 15%);
+  --destructive: hsl(0, 75%, 55%);
+  --destructive-foreground: hsl(0, 0%, 100%);
+
+  /* Form elements */
+  --border: hsl(35, 20%, 88%);
+  --input: hsl(35, 20%, 95%);
+  --ring: hsl(15, 85%, 60%);
+
+  /* Border radius */
+  --radius: 0.75rem;
+
+  /* Shadows */
+  --shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  --gradient-warm: linear-gradient(135deg, #ff9a9e 0%, #fecfef  50%, #fecfef 100%);
+  --gradient-success: linear-gradient(135deg, var(--success) 0%, var(--secondary) 100%);
+}
+
+/* Dark theme variables */
+[data-theme="dark"] {
+  --background: hsl(25, 15%, 8%);
+  --foreground: hsl(35, 20%, 95%);
+  --card: hsl(25, 15%, 12%);
+  --card-foreground: hsl(35, 20%, 95%);
+  --primary: hsl(15, 85%, 65%);
+  --secondary: hsl(140, 30%, 60%);
+  --accent: hsl(200, 80%, 70%);
+  --muted: hsl(25, 15%, 20%);
+  --muted-foreground: hsl(35, 15%, 60%);
+  --border: hsl(25, 15%, 25%);
+  --input: hsl(25, 15%, 18%);
+}
+
+/* Base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--background);
+  color: var(--foreground);
+  line-height: 1.6;
+  font-size: 16px;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Navigation */
+.navbar {
+  background: var(--gradient-hero);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-soft);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  /* slightly tighter vertical padding to reduce header height and align items */
+  padding: 0.15rem 0;
+}
+
+.navbar .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* slightly reduce header min-height to better center brand with nav items */
+  min-height: 3.6rem;
+  padding: 0.15rem 0;
+  /* add horizontal gap between brand, nav and actions for better breathing room */
+  gap: 1rem;
+}
+
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: white;
+  text-decoration: none;
+  /* slightly reduced brand text size for better visual alignment with nav links */
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.navbar-brand svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.navbar-nav {
+  display: flex;
+  align-items: center;
+  /* increased gap between nav links for clearer separation */
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navbar-nav .nav-item {
+    display: flex;
+}
+
+.navbar-nav .nav-link {
+  color: rgba(255, 255, 255, 0.95);
+  text-decoration: none;
+  font-weight: 500;
+  /* tuned vertical padding for better visual centering */
+  padding: 0.5rem 1.15rem;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  /* force horizontal layout: icon + label in one row */
+  flex-direction: row;
+  gap: 0.5rem;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.navbar-nav .nav-link:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.navbar-nav .nav-link i {
+    font-size: 1rem;
+    width: 1.25rem;
+    text-align: center;
+    /* use inline-flex so icons vertically center correctly within the link */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+/* Mobile menu: ensure icon and label are horizontal inside each link */
+.mobile-menu-content a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Small visual polish: ensure nav link labels don't wrap and icons keep and consistent baseline */
+.navbar-nav .nav-link span { display: inline-block; white-space: nowrap; }
+
+/* Ensure brand text/icon align with nav links */
+.navbar-brand, .navbar-brand i, .navbar-brand span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* Tweak brand icon sizing to match nav icons and remove any baseline drift */
+.navbar-brand i {
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navbar-brand span {
+  /* slightly reduce brand label to sit on same baseline as nav items */
+  font-size: 1.02rem;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Small responsive adjustment: ensure vertical alignment on narrow viewports */
+@media (max-width: 768px) {
+  .navbar-content { min-height: 3.2rem; }
+  .navbar-nav .nav-link { padding: 0.45rem 0.9rem; }
+}
+
+.navbar-nav .nav-link span {
+  font-weight: 500;
+}
+
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  /* increase spacing between action buttons and user-welcome */
+  gap: 1.5rem;
+}
+
+/* Give the brand a little right margin so it doesn't sit flush against nav on narrow screens */
+.navbar-brand { margin-right: 0.6rem; }
+
+.user-welcome {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.btn-primary:hover {
+  background: var(--primary-glow);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-medium);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover {
+  background: var(--muted);
+}
+
+/* Container and Layout */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.main-content {
+  margin-top: 2rem;
+  margin-bottom: 4rem;
+}
+
+/* Hero Section */
+.hero-section {
+  background: var(--gradient-warm);
+  padding: 4rem 0;
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.hero-title {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-subtitle {
+  font-size: 1.25rem;
+  color: var(--muted-foreground);
+  max-width: 600px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+/* Filter Section */
+.filter-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+}
+
+.filter-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-label {
+  font-weight: 500;
+  color: var(--foreground);
+  font-size: 0.875rem;
+}
+
+.form-select,
+.form-input {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--foreground);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.form-select:focus,
+.form-input:focus {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px rgba(var(--ring), 0.1);
+}
+
+/* Pet Grid */
+.pet-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+/* Pet Cards */
+.pet-card {
+  background: var(--card);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.pet-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-large);
+  text-decoration: none;
+  color: inherit;
+}
+
+.pet-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: var(--muted);
+}
+
+.pet-card-content {
+  padding: 1.5rem;
+}
+
+.pet-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.pet-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.pet-tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.pet-tag.species {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.pet-tag.status {
+  background: var(--success);
+  color: var(--success-foreground);
+}
+
+.pet-description {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pet-location {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+  margin-bottom: 1rem;
+}
+
+.pet-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.status-for_adoption {
+  background: var(--success);
+  color: var(--success-foreground);
+}
+
+.status-lost {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.status-found {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.status-adopted {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+
+/* Forms */
+.form-container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: var(--card);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-medium);
+  border: 1px solid var(--border);
+}
+
+.form-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--foreground);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Messages */
+.messages {
+  margin-bottom: 2rem;
+}
+
+.alert {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 0.5rem;
+  border: 1px solid;
+}
+
+.alert-success {
+  background: var(--success);
+  color: var(--success-foreground);
+  border-color: var(--success);
+}
+
+.alert-error {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border-color: var(--destructive);
+}
+
+.alert-info {
+  background: var(--accent);
+  color: var(--accent-foreground);
+  border-color: var(--accent);
+}
+
+/* Theme Toggle */
+.theme-toggle {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .navbar-nav {
+    display: none;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .pet-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}
+
+/* Loading States */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.spinner {
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--muted);
+  border-top: 2px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty States */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--muted-foreground);
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  margin-bottom: 1.5rem;
+}
+
+/* Utility Classes */
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.text-right { text-align: right; }
+
+.mt-1 { margin-top: 0.25rem; }
+.mt-2 { margin-top: 0.5rem; }
+.mt-4 { margin-top: 1rem; }
+.mb-2 { margin-bottom: 0.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-2 { gap: 0.5rem; }
+.gap-4 { gap: 1rem; }
+
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+
+.hidden { display: none; }
+
+@media (max-width: 768px) {
+  .md\:hidden { display: none; }
+}
+
+/* Dashboard Styles */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-card {
+  background: var(--card);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+}
+
+.dashboard-card h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--card);
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--border);
+}
+
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+/* Show mobile menu items in a horizontal row when the mobile menu is open
+   This keeps the desktop navbar unchanged but lays out mobile links side-by-side */
+@media (max-width: 768px) {
+  .mobile-menu-content {
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .mobile-menu-content a {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    flex: 0 0 auto; /* prevent anchors from stretching */
+  }
+}

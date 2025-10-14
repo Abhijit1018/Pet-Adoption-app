@@ -1,0 +1,336 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Pet Welfare Hub{% endblock %}</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'webapp/modern-style.css' %}?v=3.0">
+    
+    <script>
+        // Theme management
+        function setTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+        
+        // Load saved theme or default to light
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            showToast(newTheme === 'dark' ? 'Dark mode activated' : 'Light mode activated');
+        }
+        
+        // Toast notifications
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            if (!toastContainer) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `alert alert-${type} toast-notification`;
+            toast.textContent = message;
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 9999;
+                min-width: 250px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Add CSS for toast animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+    
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-content">
+                <!-- Brand -->
+                <a href="{% url 'webapp:adoption_list' %}" class="navbar-brand">
+                    <i class="fas fa-heart"></i>
+                    <span>Pet Welfare Hub</span>
+                </a>
+
+                <!-- Navigation (show horizontally on all viewports) -->
+                <ul class="navbar-nav d-flex flex-row">
+                    <li class="nav-item"><a href="{% url 'webapp:adoption_list' %}" class="nav-link">
+                        <i class="fas fa-home"></i> <span>Home</span>
+                    </a></li>
+                    <li class="nav-item"><a href="{% url 'webapp:lost_list' %}" class="nav-link">
+                        <i class="fas fa-search"></i> <span>Lost Pets</span>
+                    </a></li>
+                    <li class="nav-item"><a href="{% url 'webapp:found_list' %}" class="nav-link">
+                        <i class="fas fa-map-marker-alt"></i> <span>Found Pets</span>
+                    </a></li>
+                </ul>
+
+                <!-- User Actions -->
+                <div class="navbar-actions d-none d-md-flex">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'webapp:dashboard' %}" class="btn btn-ghost">
+                            <i class="fas fa-user"></i> Dashboard
+                        </a>
+                        {% if user.adminprofile %}
+                        <a href="{% url 'webapp:admin_dashboard' %}" class="btn btn-ghost">
+                            <i class="fas fa-shield-alt"></i> Admin
+                        </a>
+                        {% endif %}
+                        <span class="user-welcome">Welcome, {{ user.first_name|default:user.username }}</span>
+                        <a href="{% url 'webapp:logout' %}" class="btn btn-ghost">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    {% else %}
+                        <a href="{% url 'webapp:login' %}" class="btn btn-ghost">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                        <a href="{% url 'webapp:register' %}" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Register
+                        </a>
+                    {% endif %}
+                    
+                    <button onclick="toggleTheme()" class="theme-toggle" title="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button class="btn btn-ghost d-md-none" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="mobile-menu d-md-none" style="display: none;">
+        <div class="mobile-menu-content">
+            <a href="{% url 'webapp:adoption_list' %}"><i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'webapp:lost_list' %}"><i class="fas fa-search"></i> Lost Pets</a>
+            <a href="{% url 'webapp:found_list' %}"><i class="fas fa-map-marker-alt"></i> Found Pets</a>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'webapp:dashboard' %}"><i class="fas fa-user"></i> Dashboard</a>
+                <a href="{% url 'webapp:register_pet_request' %}"><i class="fas fa-plus"></i> Register Pet</a>
+                <a href="{% url 'webapp:registration_status' %}"><i class="fas fa-clipboard-list"></i> My Requests</a>
+                {% if user.adminprofile %}
+                <a href="{% url 'webapp:admin_dashboard' %}"><i class="fas fa-shield-alt"></i> Admin</a>
+                <a href="{% url 'webapp:admin_registration_requests' %}"><i class="fas fa-clipboard-check"></i> Pet Requests</a>
+                {% endif %}
+                <a href="{% url 'webapp:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+            {% else %}
+                <a href="{% url 'webapp:login' %}"><i class="fas fa-sign-in-alt"></i> Login</a>
+                <a href="{% url 'webapp:register' %}"><i class="fas fa-user-plus"></i> Register</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="container">
+            <div class="messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Page Content -->
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>&copy; 2024 Pet Welfare Hub. Made with <i class="fas fa-heart text-primary"></i> for pets in need.</p>
+                <div class="footer-links">
+                    <a href="#">About</a>
+                    <a href="#">Contact</a>
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const menu = document.getElementById('mobile-menu');
+            const menuButton = event.target.closest('.d-md-none');
+            
+            if (!menu.contains(event.target) && !menuButton) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // Filter functionality (name + species only)
+        function filterPets() {
+            const species = document.getElementById('species-filter')?.value;
+            const nameQuery = document.getElementById('name-filter')?.value.toLowerCase().trim();
+
+            const petCards = document.querySelectorAll('.pet-card');
+            
+            petCards.forEach(card => {
+                const cardSpecies = (card.dataset.species || '').toLowerCase();
+                const cardName = (card.querySelector('.pet-name')?.textContent || '').toLowerCase();
+                
+                let show = true;
+                
+                if (species && species !== 'all' && cardSpecies !== species) {
+                    show = false;
+                }
+                
+                if (nameQuery && !cardName.includes(nameQuery)) {
+                    show = false;
+                }
+                
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        // Initialize filters (only name and species)
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterInputs = document.querySelectorAll('#species-filter, #name-filter');
+            filterInputs.forEach(input => {
+                input.addEventListener('change', filterPets);
+                input.addEventListener('input', filterPets);
+            });
+        });
+    </script>
+    
+    {% block extra_js %}
+    {% endblock %}
+
+    <style>
+        /* Mobile menu styles */
+        .mobile-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-top: none;
+            box-shadow: var(--shadow-medium);
+            z-index: 999;
+        }
+        
+        .mobile-menu-content {
+            padding: 1rem;
+        }
+        
+        .mobile-menu a {
+            display: block;
+            padding: 0.75rem;
+            color: var(--foreground);
+            text-decoration: none;
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            transition: background-color 0.2s ease;
+        }
+        
+        .mobile-menu a:hover {
+            background: var(--muted);
+        }
+        
+        /* Footer styles */
+        .footer {
+            background: var(--muted);
+            padding: 2rem 0;
+            margin-top: 4rem;
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .footer-links a {
+            color: var(--muted-foreground);
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        
+        .footer-links a:hover {
+            color: var(--foreground);
+        }
+        
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+        }
+        
+        /* Update theme toggle icon */
+        [data-theme="dark"] .theme-toggle .fa-moon:before {
+            content: "\f185"; /* sun icon */
+        }
+    </style>
+</body>
+</html>

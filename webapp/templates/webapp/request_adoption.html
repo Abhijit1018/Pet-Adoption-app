@@ -1,0 +1,23 @@
+{% extends 'webapp/base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg">
+        <div class="card-body">
+          <h2 class="card-title">Request Adoption for {{ pet.name }}</h2>
+          <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="message" class="form-label">Message (optional):</label>
+              <textarea name="message" id="message" class="form-control" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn btn-success">Submit Request</button>
+            <a href="{% url 'webapp:pet_detail' pet.id %}" class="btn btn-secondary">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

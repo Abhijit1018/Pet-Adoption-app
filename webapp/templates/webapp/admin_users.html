@@ -1,0 +1,183 @@
+{% extends 'webapp/base.html' %}
+
+{% block title %}Admin User Management - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-users"></i> User Management</h1>
+        <div class="btn-group" role="group">
+            <a href="{% url 'webapp:admin_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Registered Users ({{ users|length }})</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Full Name</th>
+                            <th>Age</th>
+                            <th>Gender</th>
+                            <th>Location</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                            <th>Pets Posted</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for profile in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ profile.user.username }}</strong>
+                                {% if profile.user.is_staff %}
+                                    <span class="badge bg-warning text-dark ms-1">Admin</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ profile.user.email }}</td>
+                            <td>
+                                {% if profile.user.first_name or profile.user.last_name %}
+                                    {{ profile.user.first_name }} {{ profile.user.last_name }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ profile.age|default:"-" }}</td>
+                            <td>{{ profile.get_gender_display|default:"-" }}</td>
+                            <td>{{ profile.location|default:"-" }}</td>
+                            <td>{{ profile.phone_number|default:"-" }}</td>
+                            <td>{{ profile.user.date_joined|date:"M j, Y" }}</td>
+                            <td>
+                                <a href="#" class="badge bg-primary text-decoration-none" 
+                                   data-bs-toggle="modal" data-bs-target="#userPetsModal{{ profile.user.id }}">
+                                    {{ profile.user.pet_set.count }} pets
+                                </a>
+                            </td>
+                            <td>
+                                {% if profile.user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        
+                        <!-- Modal for user's pets -->
+                        <div class="modal fade" id="userPetsModal{{ profile.user.id }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Pets posted by {{ profile.user.username }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        {% if profile.user.pet_set.all %}
+                                            <div class="row">
+                                                {% for pet in profile.user.pet_set.all %}
+                                                <div class="col-md-6 mb-3">
+                                                    <div class="card">
+                                                        <div class="row g-0">
+                                                            {% if pet.image %}
+                                                            <div class="col-4">
+                                                                <img src="{{ pet.image.url }}" class="img-fluid rounded-start" 
+                                                                     style="height: 100px; object-fit: cover;">
+                                                            </div>
+                                                            {% endif %}
+                                                            <div class="col-{% if pet.image %}8{% else %}12{% endif %}">
+                                                                <div class="card-body p-2">
+                                                                    <h6 class="card-title mb-1">{{ pet.name }}</h6>
+                                                                    <p class="card-text mb-1">
+                                                                        <small class="text-muted">
+                                                                            {{ pet.get_species_display }} - {{ pet.get_status_display }}
+                                                                        </small>
+                                                                    </p>
+                                                                    <p class="card-text">
+                                                                        <small class="text-muted">{{ pet.location }}</small>
+                                                                    </p>
+                                                                    <a href="{% url 'webapp:pet_detail' pet.id %}" 
+                                                                       class="btn btn-sm btn-outline-primary">View</a>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <p class="text-muted text-center">No pets posted by this user.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% empty %}
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                <br>No users found
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <h4>{{ users|length }}</h4>
+                    <p class="mb-0">Total Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <h4>
+                        {% for profile in users %}
+                            {% if profile.user.is_active %}{{ forloop.counter }}{% endif %}
+                        {% endfor %}
+                    </h4>
+                    <p class="mb-0">Active Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body text-center">
+                    <h4>
+                        {% for profile in users %}
+                            {% if profile.user.is_staff %}{{ forloop.counter }}{% endif %}
+                        {% endfor %}
+                    </h4>
+                    <p class="mb-0">Admin Users</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <h4>
+                        {% for profile in users %}
+                            {% if profile.user.date_joined.date == today %}{{ forloop.counter }}{% endif %}
+                        {% endfor %}
+                    </h4>
+                    <p class="mb-0">New Today</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

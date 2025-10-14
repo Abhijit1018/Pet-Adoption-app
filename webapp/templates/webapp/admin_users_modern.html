@@ -1,0 +1,593 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}Admin User Management - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Admin Header -->
+    <div class="admin-header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="admin-breadcrumb">
+                    <a href="{% url 'webapp:admin_dashboard' %}" class="breadcrumb-link">
+                        <i class="fas fa-shield-alt"></i> Admin Dashboard
+                    </a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="breadcrumb-current">User Management</span>
+                </div>
+                <h1 class="admin-page-title">
+                    <i class="fas fa-users"></i> User Management
+                </h1>
+                <p class="admin-page-subtitle">
+                    Manage platform users, view profiles, and monitor user activities across the Pet Welfare Hub.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="admin-actions">
+                    <button onclick="exportUsers()" class="btn btn-secondary">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <a href="{% url 'webapp:admin_register' %}" class="btn btn-primary">
+                        <i class="fas fa-user-shield"></i> Add Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Stats -->
+    <div class="user-stats-grid mb-4">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-users text-primary"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ all_users|length }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-user-shield text-success"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ admin_count }}</div>
+                <div class="stat-label">Administrators</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-paw text-accent"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ active_owners }}</div>
+                <div class="stat-label">Pet Owners</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clock text-warning"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ recent_signups }}</div>
+                <div class="stat-label">Recent Signups</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="admin-controls mb-4">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="user-search" class="form-input" placeholder="Search users by name, email, or username..." onkeyup="filterUsers()">
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="filter-controls">
+                    <select id="role-filter" class="form-select" onchange="filterUsers()">
+                        <option value="all">All Users</option>
+                        <option value="admin">Administrators</option>
+                        <option value="user">Regular Users</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Contact</th>
+                    <th>Profile</th>
+                    <th>Activity</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="users-tbody">
+                {% for user_profile in all_users %}
+                <tr class="user-row" 
+                    data-role="{% if user_profile.user.adminprofile %}admin{% else %}user{% endif %}"
+                    data-name="{{ user_profile.user.first_name|default:user_profile.user.username|lower }}"
+                    data-email="{{ user_profile.user.email|lower }}"
+                    data-username="{{ user_profile.user.username|lower }}">
+                    
+                    <td class="user-info-cell">
+                        <div class="user-avatar">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <div class="user-details">
+                            <div class="user-name">
+                                {% if user_profile.user.first_name %}
+                                    {{ user_profile.user.first_name }} {{ user_profile.user.last_name|default:"" }}
+                                {% else %}
+                                    {{ user_profile.user.username }}
+                                {% endif %}
+                            </div>
+                            <div class="user-username">@{{ user_profile.user.username }}</div>
+                        </div>
+                    </td>
+                    
+                    <td class="contact-cell">
+                        <div class="contact-info">
+                            <div class="email">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ user_profile.user.email }}</span>
+                            </div>
+                            {% if user_profile.phone_number %}
+                            <div class="phone">
+                                <i class="fas fa-phone"></i>
+                                <span>{{ user_profile.phone_number }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    
+                    <td class="profile-cell">
+                        <div class="profile-info">
+                            {% if user_profile.age %}
+                                <div class="profile-item">
+                                    <i class="fas fa-birthday-cake"></i>
+                                    <span>{{ user_profile.age }} years</span>
+                                </div>
+                            {% endif %}
+                            {% if user_profile.gender %}
+                                <div class="profile-item">
+                                    <i class="fas fa-venus-mars"></i>
+                                    <span>{{ user_profile.get_gender_display }}</span>
+                                </div>
+                            {% endif %}
+                            {% if user_profile.location %}
+                                <div class="profile-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ user_profile.location }}</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    
+                    <td class="activity-cell">
+                        <div class="activity-info">
+                            <div class="join-date">
+                                <i class="fas fa-calendar-plus"></i>
+                                <span>Joined {{ user_profile.user.date_joined|date:"M Y" }}</span>
+                            </div>
+                            <div class="last-login">
+                                <i class="fas fa-clock"></i>
+                                <span>
+                                    {% if user_profile.user.last_login %}
+                                        Last seen {{ user_profile.user.last_login|timesince }} ago
+                                    {% else %}
+                                        Never logged in
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="pet-count">
+                                <i class="fas fa-paw"></i>
+                                <span>{{ user_profile.pet_count|default:0 }} pet{{ user_profile.pet_count|pluralize }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    
+                    <td class="role-cell">
+                        {% if user_profile.user.adminprofile %}
+                            <span class="role-badge admin">
+                                <i class="fas fa-shield-alt"></i>
+                                Administrator
+                            </span>
+                        {% else %}
+                            <span class="role-badge user">
+                                <i class="fas fa-user"></i>
+                                User
+                            </span>
+                        {% endif %}
+                    </td>
+                    
+                    <td class="actions-cell">
+                        <div class="action-buttons">
+                            <button onclick="viewUserDetails({{ user_profile.user.id }})" class="btn btn-ghost btn-sm" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="contactUser('{{ user_profile.user.email }}')" class="btn btn-ghost btn-sm" title="Send Email">
+                                <i class="fas fa-envelope"></i>
+                            </button>
+                            {% if not user_profile.user.adminprofile and user_profile.user != request.user %}
+                            <button onclick="toggleUserStatus({{ user_profile.user.id }})" class="btn btn-ghost btn-sm" title="Toggle Status">
+                                <i class="fas fa-toggle-on"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <div class="empty-content">
+                            <i class="fas fa-users fa-2x mb-2"></i>
+                            <p>No users found</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- No results message (hidden by default) -->
+    <div class="empty-state-container" id="no-results" style="display: none;">
+        <div class="empty-state">
+            <i class="fas fa-search fa-3x mb-3"></i>
+            <h3>No matching users</h3>
+            <p>Try adjusting your search or filter to see more results.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-header-section {
+    background: var(--card);
+    padding: 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.admin-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-link {
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-current {
+    color: var(--muted-foreground);
+}
+
+.admin-page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-page-subtitle {
+    color: var(--muted-foreground);
+    margin-bottom: 0;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.user-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.stat-card {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon i {
+    font-size: 2rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.admin-controls {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.search-box {
+    position: relative;
+}
+
+.search-box i {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+}
+
+.search-box .form-input {
+    padding-left: 2.5rem;
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.users-table-container {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow-x: auto;
+}
+
+.users-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.users-table th {
+    background: var(--muted);
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+}
+
+.users-table td {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+}
+
+.user-row:hover {
+    background: var(--muted);
+}
+
+.user-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 200px;
+}
+
+.user-avatar {
+    font-size: 2rem;
+    color: var(--primary);
+}
+
+.user-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.user-username {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.contact-info,
+.profile-info,
+.activity-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.contact-info > div,
+.profile-item,
+.activity-info > div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.contact-info i,
+.profile-item i,
+.activity-info i {
+    color: var(--primary);
+    width: 1rem;
+    text-align: center;
+}
+
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.role-badge.admin {
+    background: var(--success);
+    color: var(--success-foreground);
+}
+
+.role-badge.user {
+    background: var(--secondary);
+    color: var(--secondary-foreground);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.empty-state-container {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 3rem;
+}
+
+.empty-content {
+    text-align: center;
+    color: var(--muted-foreground);
+}
+
+@media (max-width: 768px) {
+    .admin-page-title {
+        font-size: 1.5rem;
+    }
+    
+    .admin-actions {
+        margin-top: 1rem;
+        width: 100%;
+    }
+    
+    .admin-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+    
+    .user-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+    
+    .stat-card {
+        padding: 1rem;
+    }
+    
+    .search-box {
+        margin-bottom: 1rem;
+    }
+    
+    .users-table-container {
+        font-size: 0.875rem;
+    }
+    
+    .users-table th,
+    .users-table td {
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .user-info-cell {
+        min-width: 150px;
+    }
+    
+    .contact-info,
+    .profile-info,
+    .activity-info {
+        gap: 0.25rem;
+    }
+}
+</style>
+
+<script>
+function filterUsers() {
+    const searchTerm = document.getElementById('user-search').value.toLowerCase();
+    const roleFilter = document.getElementById('role-filter').value;
+    
+    const rows = document.querySelectorAll('.user-row');
+    let visibleCount = 0;
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const email = row.dataset.email;
+        const username = row.dataset.username;
+        const role = row.dataset.role;
+        
+        let show = true;
+        
+        // Search filter
+        if (searchTerm && !name.includes(searchTerm) && !email.includes(searchTerm) && !username.includes(searchTerm)) {
+            show = false;
+        }
+        
+        // Role filter
+        if (roleFilter !== 'all' && role !== roleFilter) {
+            show = false;
+        }
+        
+        row.style.display = show ? 'table-row' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Show/hide no results message
+    const noResults = document.getElementById('no-results');
+    const tableContainer = document.querySelector('.users-table-container');
+    
+    if (visibleCount === 0 && rows.length > 0) {
+        tableContainer.style.display = 'none';
+        noResults.style.display = 'block';
+    } else {
+        tableContainer.style.display = 'block';
+        noResults.style.display = 'none';
+    }
+}
+
+function viewUserDetails(userId) {
+    alert(`View user details for user ID: ${userId}`);
+    // This would open a modal or navigate to user details page
+}
+
+function contactUser(email) {
+    window.location.href = `mailto:${email}`;
+}
+
+function toggleUserStatus(userId) {
+    if (confirm('Toggle user account status?')) {
+        alert(`Toggle user status for user ID: ${userId}`);
+        // This would make an AJAX call to toggle user status
+    }
+}
+
+function exportUsers() {
+    alert('Export users functionality would be implemented here');
+    // This would generate and download a CSV/Excel file
+}
+</script>
+{% endblock %}

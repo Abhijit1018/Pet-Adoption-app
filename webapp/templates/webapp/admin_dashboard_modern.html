@@ -1,0 +1,626 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Admin Welcome Section -->
+    <div class="admin-welcome mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="admin-header">
+                    <div class="admin-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Administrator</span>
+                    </div>
+                    <h1 class="admin-title">Admin Dashboard</h1>
+                    <p class="admin-subtitle">
+                        Manage the Pet Welfare Hub platform and oversee all pet listings and user activities.
+                    </p>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="admin-actions">
+                    <a href="{% url 'webapp:admin_pets' %}" class="btn btn-primary">
+                        <i class="fas fa-paw"></i> Manage Pets
+                    </a>
+                    <a href="{% url 'webapp:admin_registration_requests' %}" class="btn btn-warning">
+                        <i class="fas fa-clipboard-check"></i> Pet Requests
+                        {% if pending_registration_requests > 0 %}
+                        <span class="badge bg-danger ms-1">{{ pending_registration_requests }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'webapp:admin_users' %}" class="btn btn-secondary">
+                        <i class="fas fa-users"></i> Manage Users
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Overview -->
+    <div class="admin-stats-grid mb-5">
+        <div class="admin-stat-card total-pets">
+            <div class="stat-icon">
+                <i class="fas fa-paw"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ total_pets }}</div>
+                <div class="stat-label">Total Pets</div>
+                <div class="stat-trend">
+                    <i class="fas fa-arrow-up text-success"></i>
+                    <span>All listings</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-stat-card adoption-pets">
+            <div class="stat-icon">
+                <i class="fas fa-heart"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ adoption_pets }}</div>
+                <div class="stat-label">For Adoption</div>
+                <div class="stat-trend">
+                    <i class="fas fa-home text-primary"></i>
+                    <span>Available now</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-stat-card lost-pets">
+            <div class="stat-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ lost_pets }}</div>
+                <div class="stat-label">Lost Pets</div>
+                <div class="stat-trend">
+                    <i class="fas fa-exclamation-triangle text-warning"></i>
+                    <span>Need help</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-stat-card found-pets">
+            <div class="stat-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ found_pets }}</div>
+                <div class="stat-label">Found Pets</div>
+                <div class="stat-trend">
+                    <i class="fas fa-clock text-accent"></i>
+                    <span>Awaiting owners</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-stat-card total-users">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ total_users }}</div>
+                <div class="stat-label">Registered Users</div>
+                <div class="stat-trend">
+                    <i class="fas fa-user-plus text-success"></i>
+                    <span>Community members</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-stat-card pending-requests">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ pending_requests }}</div>
+                <div class="stat-label">Pending Requests</div>
+                <div class="stat-trend">
+                    <i class="fas fa-hourglass-half text-warning"></i>
+                    <span>Need review</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="admin-stat-card registration-requests" style="background: linear-gradient(135deg, #ff6b6b, #ff8e8e);">
+            <div class="stat-icon">
+                <i class="fas fa-clipboard-check"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-number">{{ pending_registration_requests }}</div>
+                <div class="stat-label">Pet Registrations</div>
+                <div class="stat-trend">
+                    <i class="fas fa-exclamation-circle text-white"></i>
+                    <span>Awaiting approval</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Content Grid -->
+    <div class="row">
+        <!-- Recent Activities -->
+        <div class="col-lg-8">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-clock"></i> Recent Activities</h3>
+                    <a href="{% url 'webapp:admin_pets' %}" class="btn btn-ghost btn-sm">View All</a>
+                </div>
+                
+                <div class="activity-list">
+                    {% if recent_pets %}
+                        {% for pet in recent_pets|slice:":8" %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-plus-circle text-success"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">
+                                    New pet listing: <strong>{{ pet.name }}</strong>
+                                </div>
+                                <div class="activity-meta">
+                                    <span class="activity-user">
+                                        <i class="fas fa-user"></i>
+                                                                            <div class="pet-owner">
+                                        {% if pet.owner %}
+                                            {{ pet.owner.first_name|default:pet.owner.username }}
+                                        {% else %}
+                                            Unknown Owner
+                                        {% endif %}
+                                    </div>
+                                    </span>
+                                    <span class="activity-time">
+                                        <i class="fas fa-clock"></i>
+                                        {{ pet.date_added|timesince }} ago
+                                    </span>
+                                    <span class="pet-tag status status-{{ pet.status }}">
+                                        {{ pet.get_status_display }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="activity-actions">
+                                <a href="{% url 'webapp:pet_detail' pet.id %}" class="btn btn-ghost btn-sm">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <button class="btn btn-ghost btn-sm" onclick="togglePetStatus({{ pet.id }})">
+                                    <i class="fas fa-toggle-on"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-history fa-2x mb-3"></i>
+                            <h4>No recent activity</h4>
+                            <p>Pet listings and user activities will appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Tools -->
+        <div class="col-lg-4">
+            <!-- Quick Actions -->
+            <div class="admin-card mb-4">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-tools"></i> Quick Actions</h3>
+                </div>
+                
+                <div class="quick-actions-grid">
+                    <a href="{% url 'webapp:admin_pets' %}" class="quick-action-card">
+                        <i class="fas fa-paw"></i>
+                        <span>Pet Management</span>
+                    </a>
+                    
+                    <a href="{% url 'webapp:admin_users' %}" class="quick-action-card">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                    </a>
+                    
+                    <a href="{% url 'webapp:adoption_list' %}" class="quick-action-card">
+                        <i class="fas fa-home"></i>
+                        <span>View Site</span>
+                    </a>
+                    
+                    <button onclick="runAutoMoveCommand()" class="quick-action-card">
+                        <i class="fas fa-sync-alt"></i>
+                        <span>Auto-Move Pets</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- System Status -->
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3><i class="fas fa-server"></i> System Status</h3>
+                </div>
+                
+                <div class="system-status">
+                    <div class="status-item">
+                        <div class="status-indicator status-online"></div>
+                        <div class="status-info">
+                            <div class="status-label">Database</div>
+                            <div class="status-value">Online</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-item">
+                        <div class="status-indicator status-online"></div>
+                        <div class="status-info">
+                            <div class="status-label">Media Storage</div>
+                            <div class="status-value">Available</div>
+                        </div>
+                    </div>
+                    
+                    <div class="status-item">
+                        <div class="status-indicator status-online"></div>
+                        <div class="status-info">
+                            <div class="status-label">Auto-Move Task</div>
+                            <div class="status-value">Active</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-welcome {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    padding: 2.5rem;
+    border-radius: var(--radius);
+    color: white;
+    margin-bottom: 2rem;
+}
+
+.admin-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.admin-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.admin-subtitle {
+    font-size: 1.125rem;
+    opacity: 0.9;
+    margin-bottom: 0;
+}
+
+.admin-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.admin-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.admin-stat-card {
+    background: var(--card);
+    padding: 2rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    transition: transform 0.2s ease;
+}
+
+.admin-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.admin-stat-card .stat-icon {
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.total-pets .stat-icon { background: var(--primary); }
+.adoption-pets .stat-icon { background: var(--success); }
+.lost-pets .stat-icon { background: var(--destructive); }
+.found-pets .stat-icon { background: var(--accent); }
+.total-users .stat-icon { background: var(--secondary); }
+.pending-requests .stat-icon { background: var(--warning); }
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--foreground);
+    line-height: 1;
+}
+
+.stat-label {
+    color: var(--muted-foreground);
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0.5rem 0;
+}
+
+.stat-trend {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.admin-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+    border: 1px solid var(--border);
+}
+
+.admin-card-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.admin-card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.activity-list {
+    padding: 1rem 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--border);
+    transition: background-color 0.2s ease;
+}
+
+.activity-item:hover {
+    background: var(--muted);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 50%;
+    background: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.activity-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+.activity-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.activity-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1.5rem;
+}
+
+.quick-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    background: var(--muted);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--foreground);
+    transition: all 0.2s ease;
+    border: 1px solid var(--border);
+}
+
+.quick-action-card:hover {
+    background: var(--border);
+    transform: translateY(-2px);
+    text-decoration: none;
+    color: var(--foreground);
+}
+
+.quick-action-card i {
+    font-size: 1.5rem;
+    color: var(--primary);
+}
+
+.quick-action-card span {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.system-status {
+    padding: 1.5rem;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+.status-indicator {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+}
+
+.status-online { background: var(--success); }
+.status-warning { background: var(--warning); }
+.status-error { background: var(--destructive); }
+
+.status-info {
+    flex: 1;
+}
+
+.status-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.status-value {
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+}
+
+@media (max-width: 768px) {
+    .admin-title {
+        font-size: 2rem;
+    }
+    
+    .admin-actions {
+        margin-top: 1rem;
+    }
+    
+    .admin-stats-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .admin-stat-card {
+        padding: 1.5rem;
+    }
+    
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-item {
+        padding: 1rem;
+    }
+    
+    .activity-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+</style>
+
+<script>
+function togglePetStatus(petId) {
+    if (!confirm("Toggle this pet's status?")) return;
+    const csrftoken = getCookie('csrftoken');
+    fetch(`/toggle-pet-status/${petId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+        },
+        body: ''
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Pet status toggled', 'success');
+            setTimeout(() => window.location.reload(), 600);
+        } else {
+            showToast('Failed to toggle pet status', 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Error toggling status', 'danger');
+    });
+}
+
+function runAutoMoveCommand() {
+    if (!confirm('Run the auto-move command to move found pets to adoption after 15 days?')) return;
+    const csrftoken = getCookie('csrftoken');
+    fetch(`/admin/run-auto-move/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+        },
+        body: ''
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Auto-move command executed successfully', 'success');
+        } else {
+            showToast('Auto-move command failed', 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Error executing auto-move', 'danger');
+    });
+}
+</script>
+{% endblock %}

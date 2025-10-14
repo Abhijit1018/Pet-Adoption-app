@@ -1,0 +1,28 @@
+{% extends 'webapp/base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg">
+        {% if pet.image %}
+          <img src="{{ pet.image.url }}" class="card-img-top" alt="{{ pet.name }}">
+        {% endif %}
+        <div class="card-body">
+          <h2 class="card-title">{{ pet.name }}</h2>
+          <ul class="list-group list-group-flush mb-3">
+            <li class="list-group-item">Species: <b>{{ pet.species }}</b></li>
+            <li class="list-group-item">Breed: <b>{{ pet.breed }}</b></li>
+            <li class="list-group-item">Color: <b>{{ pet.color }}</b></li>
+            <li class="list-group-item">Status: <b>{{ pet.status|title }}</b></li>
+            <li class="list-group-item">Location: <b>{{ pet.location }}</b></li>
+          </ul>
+          {% if user.is_authenticated and pet.owner != user %}
+            <a href="{% url 'webapp:request_adoption' pet.id %}" class="btn btn-success mb-2">Request Adoption</a>
+          {% endif %}
+          <a href="javascript:history.back()" class="btn btn-secondary">Back</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

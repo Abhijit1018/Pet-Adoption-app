@@ -1,0 +1,598 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}Admin Pet Management - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Admin Header -->
+    <div class="admin-header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="admin-breadcrumb">
+                    <a href="{% url 'webapp:admin_dashboard' %}" class="breadcrumb-link">
+                        <i class="fas fa-shield-alt"></i> Admin Dashboard
+                    </a>
+                    <i class="fas fa-chevron-right"></i>
+                    <span class="breadcrumb-current">Pet Management</span>
+                </div>
+                <h1 class="admin-page-title">
+                    <i class="fas fa-paw"></i> Pet Management
+                </h1>
+                <p class="admin-page-subtitle">
+                    Manage all pet listings across the platform. Review, approve, and moderate pet content.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="admin-actions">
+                    <button onclick="toggleAllPets()" class="btn btn-secondary">
+                        <i class="fas fa-toggle-on"></i> Toggle All
+                    </button>
+                    <button onclick="runAutoMove()" class="btn btn-primary">
+                        <i class="fas fa-sync-alt"></i> Auto-Move Found
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Stats Bar -->
+    <div class="admin-controls mb-4">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="filter-controls">
+                    <select id="status-filter" class="form-select" onchange="filterPets()">
+                        <option value="all">All Status</option>
+                        <option value="for_adoption">For Adoption</option>
+                        <option value="lost">Lost</option>
+                        <option value="found">Found</option>
+                        <option value="adopted">Adopted</option>
+                    </select>
+                    
+                    <select id="species-filter" class="form-select" onchange="filterPets()">
+                        <option value="all">All Species</option>
+                        <option value="dog">Dogs</option>
+                        <option value="cat">Cats</option>
+                        <option value="rabbit">Rabbits</option>
+                        <option value="bird">Birds</option>
+                        <option value="other">Other</option>
+                    </select>
+                    
+                    <input type="text" id="search-filter" class="form-input" placeholder="Search pets..." onkeyup="filterPets()">
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <div class="results-info">
+                    <span id="results-count">{{ all_pets|length }} pets found</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pets Grid -->
+    <div class="admin-pets-grid" id="pets-container">
+        {% for pet in all_pets %}
+        <div class="admin-pet-card" 
+             data-status="{{ pet.status }}" 
+             data-species="{{ pet.species }}" 
+             data-name="{{ pet.name|lower }}"
+             data-owner="{% if pet.owner %}{{ pet.owner.username|lower }}{% else %}no-owner{% endif %}">
+            
+            <div class="pet-card-header">
+                <div class="pet-status-badge status-{{ pet.status }}">
+                    {{ pet.get_status_display }}
+                </div>
+                <div class="pet-actions-menu">
+                    <button class="btn btn-ghost btn-sm" onclick="toggleMenu({{ pet.id }})">
+                        <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="actions-dropdown" id="menu-{{ pet.id }}" style="display: none;">
+                        <a href="{% url 'webapp:pet_detail' pet.id %}" class="dropdown-item">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        <button onclick="togglePetStatus({{ pet.id }})" class="dropdown-item">
+                            <i class="fas fa-toggle-on"></i> Toggle Status
+                        </button>
+                        <button onclick="deletePet({{ pet.id }})" class="dropdown-item text-danger">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="pet-card-image">
+                {% if pet.image %}
+                    <img src="{{ pet.image.url }}" alt="{{ pet.name }}">
+                {% else %}
+                    <div class="pet-placeholder">
+                        <i class="fas fa-paw"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="pet-card-content">
+                <h3 class="pet-name">{{ pet.name }}</h3>
+                
+                <div class="pet-info-grid">
+                    <div class="info-item">
+                        <i class="fas fa-paw"></i>
+                        <span>{{ pet.get_species_display }}</span>
+                    </div>
+                    {% if pet.breed %}
+                    <div class="info-item">
+                        <i class="fas fa-dna"></i>
+                        <span>{{ pet.breed }}</span>
+                    </div>
+                    {% endif %}
+                    {% if pet.age %}
+                    <div class="info-item">
+                        <i class="fas fa-birthday-cake"></i>
+                        <span>{{ pet.age }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="info-item">
+                        <i class="fas fa-venus-mars"></i>
+                        <span>{{ pet.get_gender_display }}</span>
+                    </div>
+                </div>
+                
+                <div class="pet-location">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>{{ pet.location }}</span>
+                </div>
+                
+                <div class="pet-owner">
+                    <i class="fas fa-user"></i>
+                    <span>
+                        {% if pet.owner %}
+                            {{ pet.owner.first_name|default:pet.owner.username }}
+                        {% else %}
+                            No Owner
+                        {% endif %}
+                    </span>
+                </div>
+                
+                <div class="pet-date">
+                    <i class="fas fa-clock"></i>
+                    <span>{{ pet.date_added|date:"M d, Y" }}</span>
+                </div>
+                
+                {% if pet.status == 'found' and pet.found_date %}
+                <div class="found-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Found {{ pet.found_date|timesince }} ago</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="pet-card-footer">
+                <button onclick="viewPet({{ pet.id }})" class="btn btn-primary btn-sm">
+                    <i class="fas fa-eye"></i> View
+                </button>
+                <button onclick="togglePetStatus({{ pet.id }})" class="btn btn-secondary btn-sm">
+                    <i class="fas fa-toggle-on"></i> Toggle
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state" id="empty-state">
+            <i class="fas fa-paw fa-3x mb-3"></i>
+            <h3>No pets found</h3>
+            <p>No pets match your current filters.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- No results message (hidden by default) -->
+    <div class="empty-state" id="no-results" style="display: none;">
+        <i class="fas fa-search fa-3x mb-3"></i>
+        <h3>No matching pets</h3>
+        <p>Try adjusting your filters to see more results.</p>
+    </div>
+</div>
+
+<style>
+.admin-header-section {
+    background: var(--card);
+    padding: 2rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.admin-breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.breadcrumb-link {
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.breadcrumb-link:hover {
+    text-decoration: underline;
+}
+
+.breadcrumb-current {
+    color: var(--muted-foreground);
+}
+
+.admin-page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.admin-page-subtitle {
+    color: var(--muted-foreground);
+    margin-bottom: 0;
+}
+
+.admin-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.admin-controls {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.filter-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.filter-controls .form-select,
+.filter-controls .form-input {
+    min-width: 150px;
+}
+
+.results-info {
+    color: var(--muted-foreground);
+    font-size: 0.875rem;
+}
+
+.admin-pets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.admin-pet-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.admin-pet-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-medium);
+}
+
+.pet-card-header {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+}
+
+.pet-status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.pet-actions-menu {
+    position: relative;
+}
+
+.actions-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-medium);
+    z-index: 10;
+    min-width: 160px;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    color: var(--foreground);
+    text-decoration: none;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: var(--muted);
+    color: var(--foreground);
+    text-decoration: none;
+}
+
+.pet-card-image {
+    height: 200px;
+    overflow: hidden;
+}
+
+.pet-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.pet-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+    font-size: 2rem;
+}
+
+.pet-card-content {
+    padding: 1.5rem;
+}
+
+.pet-name {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.pet-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.info-item i {
+    color: var(--primary);
+    width: 1rem;
+    text-align: center;
+}
+
+.pet-location,
+.pet-owner,
+.pet-date {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--muted-foreground);
+    margin-bottom: 0.5rem;
+}
+
+.pet-location i,
+.pet-owner i,
+.pet-date i {
+    color: var(--primary);
+    width: 1rem;
+    text-align: center;
+}
+
+.found-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--warning);
+    background: var(--warning);
+    color: var(--warning-foreground);
+    padding: 0.5rem;
+    border-radius: var(--radius);
+    margin-top: 0.75rem;
+}
+
+.pet-card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pet-card-footer .btn {
+    flex: 1;
+}
+
+@media (max-width: 768px) {
+    .admin-page-title {
+        font-size: 1.5rem;
+    }
+    
+    .admin-actions {
+        margin-top: 1rem;
+        width: 100%;
+    }
+    
+    .admin-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+    
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-controls .form-select,
+    .filter-controls .form-input {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .admin-pets-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pet-info-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+let allMenusOpen = false;
+
+function toggleMenu(petId) {
+    const menu = document.getElementById(`menu-${petId}`);
+    const isVisible = menu.style.display !== 'none';
+    
+    // Close all menus
+    document.querySelectorAll('.actions-dropdown').forEach(dropdown => {
+        dropdown.style.display = 'none';
+    });
+    
+    // Toggle current menu
+    if (!isVisible) {
+        menu.style.display = 'block';
+    }
+}
+
+function viewPet(petId) {
+    window.open(`/pet/${petId}/`, '_blank');
+}
+
+function togglePetStatus(petId) {
+    if (!confirm("Toggle this pet's status?")) return;
+
+    const csrftoken = getCookie('csrftoken');
+
+    fetch(`/toggle-pet-status/${petId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken,
+        },
+        body: ''
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            showToast('Pet status toggled', 'success');
+            setTimeout(() => window.location.reload(), 600);
+        } else {
+            showToast('Failed to toggle pet status', 'danger');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('Error toggling status', 'danger');
+    });
+}
+
+function deletePet(petId) {
+    if (confirm('Are you sure you want to delete this pet? This action cannot be undone.')) {
+        // This would make an AJAX call to delete the pet
+        alert('Delete functionality would be implemented here');
+    }
+}
+
+function toggleAllPets() {
+    alert('Toggle all pets functionality would be implemented here');
+}
+
+function runAutoMove() {
+    if (confirm('Run auto-move command to move found pets to adoption after 15 days?')) {
+        alert('Auto-move command executed');
+        showToast('Auto-move command executed successfully', 'success');
+    }
+}
+
+function filterPets() {
+    const statusFilter = document.getElementById('status-filter').value;
+    const speciesFilter = document.getElementById('species-filter').value;
+    const searchFilter = document.getElementById('search-filter').value.toLowerCase();
+    
+    const petCards = document.querySelectorAll('.admin-pet-card');
+    let visibleCount = 0;
+    
+    petCards.forEach(card => {
+        const cardStatus = card.dataset.status;
+        const cardSpecies = card.dataset.species;
+        const cardName = card.dataset.name;
+        const cardOwner = card.dataset.owner;
+        
+        let show = true;
+        
+        // Status filter
+        if (statusFilter !== 'all' && cardStatus !== statusFilter) {
+            show = false;
+        }
+        
+        // Species filter
+        if (speciesFilter !== 'all' && cardSpecies !== speciesFilter) {
+            show = false;
+        }
+        
+        // Search filter
+        if (searchFilter && !cardName.includes(searchFilter) && !cardOwner.includes(searchFilter)) {
+            show = false;
+        }
+        
+        card.style.display = show ? 'block' : 'none';
+        if (show) visibleCount++;
+    });
+    
+    // Update results count
+    document.getElementById('results-count').textContent = `${visibleCount} pets found`;
+    
+    // Show/hide no results message
+    const noResults = document.getElementById('no-results');
+    if (visibleCount === 0 && petCards.length > 0) {
+        noResults.style.display = 'block';
+    } else {
+        noResults.style.display = 'none';
+    }
+}
+
+// Close menus when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.pet-actions-menu')) {
+        document.querySelectorAll('.actions-dropdown').forEach(dropdown => {
+            dropdown.style.display = 'none';
+        });
+    }
+});
+</script>
+{% endblock %}

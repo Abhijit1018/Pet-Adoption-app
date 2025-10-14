@@ -1,0 +1,142 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}Register New Pet{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Local adjustments: center using Bootstrap grid for reliable centering */
+  .card-hero {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+    border: 1px solid var(--border);
+  }
+  .card-hero .card-header {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: var(--primary-foreground);
+    padding: 1.8rem 1.4rem;
+  }
+  .card-hero .card-body { padding: 1.6rem; background: var(--card); }
+  .muted-note { color: var(--muted-foreground); font-size: .95rem; }
+  /* Slightly larger inputs */
+  .form-control { padding: .9rem; border-radius: .6rem; }
+  /* Ensure image preview fits */
+  .preview-image { max-width: 160px; max-height: 120px; object-fit: cover; border-radius: 8px; }
+  @media (max-width: 768px) { .card-hero .card-header { text-align: center; } }
+  </style>
+{% endblock %}
+
+{% block content %}
+<!-- TEMPLATE: register_pet_request.html - updated: 2025-10-07 14:35:00 -->
+
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-8">
+      <div class="card card-hero">
+        <div class="card-header d-flex align-items-center">
+          <h2 class="mb-1"><i class="fas fa-paw"></i> Register New Pet</h2>
+          <span class="badge bg-danger ms-3">UPDATED</span>
+          <div class="muted-note ms-3">Submit pet details — an admin will review and approve the listing.</div>
+        </div>
+
+        <div class="card-body">
+          <div class="mb-3 alert alert-info p-3">
+            <strong>How it works:</strong>
+            <div class="muted-note">Fill the form, submit, then wait for admin review. Approved pets appear on the site.</div>
+          </div>
+
+          <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label">Pet Name *</label>
+              {{ form.name }}
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Species *</label>
+                {{ form.species }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">Breed</label>
+                {{ form.breed }}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Age</label>
+                {{ form.age }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Gender</label>
+                {{ form.gender }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Status</label>
+                {{ form.pet_status }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Location</label>
+              {{ form.location }}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Description</label>
+              {{ form.description }}
+            </div>
+
+            <div class="row align-items-center">
+              <div class="col-md-8 mb-3">
+                <label class="form-label">Contact Email</label>
+                {{ form.contact_email }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">Contact Phone</label>
+                {{ form.contact_phone }}
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Upload Image</label>
+              <div class="d-flex align-items-center gap-3">
+                <div>
+                  {{ form.image }}
+                </div>
+                <div id="image-preview" class="d-none">
+                  <img id="preview-img" class="preview-image" src="" alt="Preview">
+                </div>
+              </div>
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary btn-lg">Submit Registration Request</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Simple image preview
+  (function(){
+    const input = document.querySelector('input[type=file]');
+    if (!input) return;
+    const preview = document.getElementById('preview-img');
+    const wrapper = document.getElementById('image-preview');
+    input.addEventListener('change', function(e){
+      const file = this.files && this.files[0];
+      if (!file) { wrapper.classList.add('d-none'); return; }
+      const url = URL.createObjectURL(file);
+      preview.src = url; wrapper.classList.remove('d-none');
+    });
+  })();
+</script>
+
+{% endblock %}

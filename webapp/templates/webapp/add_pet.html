@@ -1,0 +1,161 @@
+{% extends 'webapp/base.html' %}
+
+{% block title %}Add Pet - Pet Welfare Hub{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card shadow">
+        <div class="card-header">
+          <h2 class="mb-0"><i class="fas fa-plus-circle"></i> Add a New Pet</h2>
+        </div>
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="{{ form.name.id_for_label }}" class="form-label">Pet Name *</label>
+                  {{ form.name }}
+                  {% if form.name.errors %}
+                    <div class="text-danger">{{ form.name.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="{{ form.species.id_for_label }}" class="form-label">Species *</label>
+                  {{ form.species }}
+                  {% if form.species.errors %}
+                    <div class="text-danger">{{ form.species.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label for="{{ form.breed.id_for_label }}" class="form-label">Breed</label>
+                  {{ form.breed }}
+                  {% if form.breed.errors %}
+                    <div class="text-danger">{{ form.breed.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label for="{{ form.color.id_for_label }}" class="form-label">Color</label>
+                  {{ form.color }}
+                  {% if form.color.errors %}
+                    <div class="text-danger">{{ form.color.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label for="{{ form.gender.id_for_label }}" class="form-label">Gender</label>
+                  {{ form.gender }}
+                  {% if form.gender.errors %}
+                    <div class="text-danger">{{ form.gender.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label for="{{ form.age.id_for_label }}" class="form-label">Age</label>
+                  {{ form.age }}
+                  {% if form.age.help_text %}
+                    <small class="form-text text-muted">{{ form.age.help_text }}</small>
+                  {% endif %}
+                  {% if form.age.errors %}
+                    <div class="text-danger">{{ form.age.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label for="{{ form.status.id_for_label }}" class="form-label">Status *</label>
+                  {{ form.status }}
+                  {% if form.status.errors %}
+                    <div class="text-danger">{{ form.status.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-group mb-3">
+                  <label for="{{ form.location.id_for_label }}" class="form-label">Location *</label>
+                  {{ form.location }}
+                  {% if form.location.errors %}
+                    <div class="text-danger">{{ form.location.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="{{ form.contact_email.id_for_label }}" class="form-label">Contact Email</label>
+                  {{ form.contact_email }}
+                  {% if form.contact_email.errors %}
+                    <div class="text-danger">{{ form.contact_email.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label for="{{ form.contact_phone.id_for_label }}" class="form-label">Contact Phone</label>
+                  {{ form.contact_phone }}
+                  {% if form.contact_phone.errors %}
+                    <div class="text-danger">{{ form.contact_phone.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+              {{ form.description }}
+              <small class="form-text text-muted">Describe the pet's personality, special needs, or any other relevant information.</small>
+              {% if form.description.errors %}
+                <div class="text-danger">{{ form.description.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="form-group mb-4">
+              <label for="{{ form.image.id_for_label }}" class="form-label">Pet Photo</label>
+              {{ form.image }}
+              <small class="form-text text-muted">Upload a clear photo of the pet (optional but recommended).</small>
+              {% if form.image.errors %}
+                <div class="text-danger">{{ form.image.errors }}</div>
+              {% endif %}
+            </div>
+            
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-success btn-lg">
+                <i class="fas fa-plus"></i> Add Pet
+              </button>
+              <a href="{% url 'webapp:dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .form-control, .form-select {
+    margin-bottom: 0;
+  }
+  .card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+  }
+</style>
+{% endblock %}
