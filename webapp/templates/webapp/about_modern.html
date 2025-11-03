@@ -1,0 +1,28 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}About{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>About Pet Welfare Hub</h1>
+    <p>Pet Welfare Hub is an open platform dedicated to helping animals find loving homes and reuniting lost pets with their families. We bring together adopters, foster volunteers, rescue organizations, and community members to provide a single place where pets can be listed, discovered, and cared for.</p>
+
+    <h3>Our mission</h3>
+    <p>We aim to reduce the number of homeless pets by making adoption, rescue, and reunification simple and transparent. We promote responsible ownership, encourage volunteerism, and work with local shelters and rescues to increase adoption outcomes.</p>
+
+    <h3>What we do</h3>
+    <ul>
+        <li>List pets available for adoption with clear photos and details.</li>
+        <li>Provide a lost & found board to reunite owners with their pets quickly.</li>
+        <li>Enable direct communication between adopters and pet owners or rescue admins.</li>
+        <li>Offer tools for volunteers and shelters to manage pet listings and adoption requests.</li>
+    </ul>
+
+    <h3>Our values</h3>
+    <p>We believe in compassion, transparency, and community-driven support. Every feature is built to prioritize the safety and well-being of animals while supporting the people who care for them.</p>
+
+    <h3>Team & partners</h3>
+    <p>Pet Welfare Hub is supported by a network of rescue organizations and volunteers. If you'd like to partner with us or list rescue animals, please contact our team via the <a href="{% url 'webapp:contact' %}">Contact</a> page.</p>
+
+    <h3>Contact</h3>
+    <p>If you have questions, partnership inquiries, or want to volunteer, use our <a href="{% url 'webapp:contact' %}">Contact</a> page to reach the team.</p>
+</div>
+{% endblock %}

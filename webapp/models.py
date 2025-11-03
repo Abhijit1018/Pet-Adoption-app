@@ -200,3 +200,20 @@ class AdoptionRequest(models.Model):
     def __str__(self):
         return f"{self.user.username} requests {self.pet.name} ({self.status})"
 
+
+class Notification(models.Model):
+    """Simple notification model for in-app alerts."""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='notifications_sent')
+    verb = models.CharField(max_length=255)
+    message = models.TextField(blank=True, null=True)
+    url = models.CharField(max_length=255, blank=True, null=True, help_text='Optional URL to link to in the app')
+    unread = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Notification to {self.user.username}: {self.verb}"
+

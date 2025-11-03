@@ -1,0 +1,31 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}Privacy Policy{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Privacy Policy</h1>
+    <p>Your privacy matters. This page describes how Pet Welfare Hub collects, uses, and shares information when you use our service.</p>
+
+    <h3>Information we collect</h3>
+    <ul>
+        <li>Account information (name, email) when you register.</li>
+        <li>Pet listing data you provide (photos, descriptions, contact details).</li>
+        <li>Messages and notifications you create inside the platform.</li>
+        <li>Usage data (pages viewed, times) for improving the service.</li>
+    </ul>
+
+    <h3>How we use information</h3>
+    <ul>
+        <li>To operate and improve the site and match pets with adopters.</li>
+        <li>To send notifications about adoption requests and messages.</li>
+        <li>To prevent abuse and enforce our terms of service.</li>
+    </ul>
+
+    <h3>Sharing and disclosure</h3>
+    <p>We do not sell personal data. We may share information with service providers and partners who help us run the site. In limited cases, we may disclose information to comply with legal obligations.</p>
+
+    <h3>Security</h3>
+    <p>We take reasonable measures to protect your data, but no system is completely secure. Please do not share sensitive personal information in public pet listings or messages.</p>
+
+    <p>If you have privacy-related questions, please contact us via the <a href="{% url 'webapp:contact' %}">Contact</a> page.</p>
+</div>
+{% endblock %}

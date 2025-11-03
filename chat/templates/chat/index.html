@@ -1,0 +1,24 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}Messages{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex align-items-center justify-content-between">
+        <h3>Your Conversations</h3>
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'chat:start_with_admins' %}">Chat with Admins</a>
+    </div>
+    <div class="list-group">
+        {% for c in conversations %}
+            <a href="{% url 'chat:conversation' c.id %}" class="list-group-item list-group-item-action">
+                {{ c.subject|default:c.id }} - Participants: 
+                {% if c.participants_safe %}
+                    {% for p in c.participants_safe %}{{ p.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                {% else %}
+                    {% for p in c.participants.all %}{{ p.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                {% endif %}
+            </a>
+        {% empty %}
+            <p>No conversations yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

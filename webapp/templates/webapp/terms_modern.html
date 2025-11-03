@@ -1,0 +1,28 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}Terms and Conditions{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Terms and Conditions</h1>
+    <p>By using Pet Welfare Hub you agree to the following terms. Please read them carefully.</p>
+
+    <h3>Use of the service</h3>
+    <ul>
+        <li>Users must provide accurate information when creating listings or accounts.</li>
+        <li>Do not post illegal, harmful, or abusive content.</li>
+    </ul>
+
+    <h3>Listings and transactions</h3>
+    <p>Pet Welfare Hub is a platform for connecting people. We are not a party to transactions between users. Any adoption agreements, transfers of ownership, or payments are handled between the parties involved.</p>
+
+    <h3>User responsibilities</h3>
+    <ul>
+        <li>Ensure animals are treated humanely and get appropriate veterinary care.</li>
+        <li>Comply with local laws and regulations regarding animal ownership and adoption.</li>
+    </ul>
+
+    <h3>Limitation of liability</h3>
+    <p>To the extent permitted by law, Pet Welfare Hub is not liable for any damages arising from the use of the platform.</p>
+
+    <p>Contact us via the <a href="{% url 'webapp:contact' %}">Contact</a> page with any legal or policy questions.</p>
+</div>
+{% endblock %}

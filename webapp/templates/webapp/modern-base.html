@@ -87,15 +87,18 @@
         <div class="container">
             <div class="navbar-content">
                 <!-- Brand -->
-                <a href="{% url 'webapp:adoption_list' %}" class="navbar-brand">
+                <a href="{% url 'webapp:home' %}" class="navbar-brand">
                     <i class="fas fa-heart"></i>
                     <span>Pet Welfare Hub</span>
                 </a>
 
                 <!-- Navigation (show horizontally on all viewports) -->
                 <ul class="navbar-nav d-flex flex-row">
-                    <li class="nav-item"><a href="{% url 'webapp:adoption_list' %}" class="nav-link">
+                    <li class="nav-item"><a href="{% url 'webapp:home' %}" class="nav-link">
                         <i class="fas fa-home"></i> <span>Home</span>
+                    </a></li>
+                    <li class="nav-item"><a href="{% url 'webapp:adoption_list' %}" class="nav-link">
+                        <i class="fas fa-paw"></i> <span>Adoption</span>
                     </a></li>
                     <li class="nav-item"><a href="{% url 'webapp:lost_list' %}" class="nav-link">
                         <i class="fas fa-search"></i> <span>Lost Pets</span>
@@ -108,6 +111,16 @@
                 <!-- User Actions -->
                 <div class="navbar-actions d-none d-md-flex">
                     {% if user.is_authenticated %}
+                        <a href="{% url 'webapp:notifications' %}" class="btn btn-ghost position-relative">
+                            <i class="fas fa-bell"></i>
+                            {% if unread_notifications_count and unread_notifications_count > 0 %}
+                                <span class="badge bg-danger position-absolute" style="top:0;right:0;font-size:0.7rem;">{{ unread_notifications_count }}</span>
+                            {% endif %}
+                        </a>
+                        <a href="{% url 'chat:index' %}" class="btn btn-ghost">
+                            <i class="fas fa-comments"></i> Chat
+                        </a>
+                        <!-- Contact Admins moved to Contact page -->
                         <a href="{% url 'webapp:dashboard' %}" class="btn btn-ghost">
                             <i class="fas fa-user"></i> Dashboard
                         </a>
@@ -145,12 +158,14 @@
     <!-- Mobile Menu -->
     <div id="mobile-menu" class="mobile-menu d-md-none" style="display: none;">
         <div class="mobile-menu-content">
-            <a href="{% url 'webapp:adoption_list' %}"><i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'webapp:home' %}"><i class="fas fa-home"></i> Home</a>
+            <a href="{% url 'webapp:adoption_list' %}"><i class="fas fa-paw"></i> Adoption</a>
             <a href="{% url 'webapp:lost_list' %}"><i class="fas fa-search"></i> Lost Pets</a>
             <a href="{% url 'webapp:found_list' %}"><i class="fas fa-map-marker-alt"></i> Found Pets</a>
             
             {% if user.is_authenticated %}
                 <a href="{% url 'webapp:dashboard' %}"><i class="fas fa-user"></i> Dashboard</a>
+                <a href="{% url 'webapp:contact' %}"><i class="fas fa-envelope"></i> Contact</a>
                 <a href="{% url 'webapp:register_pet_request' %}"><i class="fas fa-plus"></i> Register Pet</a>
                 <a href="{% url 'webapp:registration_status' %}"><i class="fas fa-clipboard-list"></i> My Requests</a>
                 {% if user.adminprofile %}
@@ -188,13 +203,13 @@
     <!-- Footer -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-content">
+                <div class="footer-content">
                 <p>&copy; 2024 Pet Welfare Hub. Made with <i class="fas fa-heart text-primary"></i> for pets in need.</p>
                 <div class="footer-links">
-                    <a href="#">About</a>
-                    <a href="#">Contact</a>
-                    <a href="#">Privacy</a>
-                    <a href="#">Terms</a>
+                    <a href="{% url 'webapp:about' %}">About</a>
+                    <a href="{% url 'webapp:contact' %}">Contact</a>
+                    <a href="{% url 'webapp:privacy' %}">Privacy</a>
+                    <a href="{% url 'webapp:terms' %}">Terms</a>
                 </div>
             </div>
         </div>

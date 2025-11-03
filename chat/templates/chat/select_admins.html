@@ -1,0 +1,25 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}Contact Admins{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Contact Admins</h3>
+    {% if not admins %}
+        <div class="alert alert-warning">No admins available at the moment.</div>
+    {% else %}
+        <form method="post" action="{% url 'chat:start_with_admins' %}">
+            {% csrf_token %}
+            <p>Select the admin(s) you'd like to contact:</p>
+            <div class="mb-3">
+                {% for a in admins %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="admin_ids" id="admin_{{ a.id }}" value="{{ a.id }}">
+                        <label class="form-check-label" for="admin_{{ a.id }}">{{ a.get_full_name|default:a.username }} ({{ a.email }})</label>
+                    </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-primary" type="submit">Start conversation</button>
+            <a href="{% url 'chat:index' %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

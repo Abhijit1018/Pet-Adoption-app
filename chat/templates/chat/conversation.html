@@ -1,0 +1,146 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}Conversation{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h3>{{ conversation.subject|default:'Conversation' }}</h3>
+    <div class="mb-2">
+        <a class="btn btn-sm btn-outline-secondary" href="{% url 'chat:start_with_admins' %}">Chat with Admins</a>
+    </div>
+    <div class="mb-2">
+        {% if user in conversation.participants_safe %}
+            <form method="post" action="{% url 'chat:leave_conversation' conversation.id %}" style="display:inline-block;">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-warning" type="submit">Leave Conversation</button>
+            </form>
+        {% endif %}
+        {% if user.is_staff or user.is_superuser %}
+            <form method="post" action="{% url 'chat:delete_conversation' conversation.id %}" style="display:inline-block; margin-left:0.5rem;" onsubmit="return confirm('Delete this conversation for everyone? This cannot be undone.');">
+                {% csrf_token %}
+                <button class="btn btn-sm btn-outline-danger" type="submit">Delete Conversation</button>
+            </form>
+        {% endif %}
+    </div>
+    <div id="messages" style="max-height:400px; overflow:auto; border:1px solid #ddd; padding:1rem; background:#fff;">
+        {% for m in messages %}
+            <div data-message-id="{{ m.id }}" id="message-{{ m.id }}">
+                <strong>{% if m.sender_user %}{{ m.sender_user.username }}{% else %}{{ m.sender.username }}{% endif %}</strong>: {{ m.text }}
+                <br><small class="text-muted">{{ m.created_at|date:"SHORT_DATETIME_FORMAT" }}</small>
+                {% if user.is_staff or user.is_superuser %}
+                    <button class="btn btn-sm btn-link text-danger delete-msg" data-convo-id="{{ conversation.id|default:'0' }}" data-msg-id="{{ m.id|default:'0' }}" type="button">Delete</button>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <form id="sendForm" method="post" action="{% url 'chat:send_message' conversation.id %}">
+        {% csrf_token %}
+        <div class="input-group mt-3">
+            <input type="text" id="messageText" name="text" class="form-control" placeholder="Type a message...">
+            <button class="btn btn-primary" type="submit">Send</button>
+        </div>
+    </form>
+</div>
+
+{% block extra_js %}
+<script>
+const convoId = parseInt('{{ conversation.id|default:'0' }}', 10) || 0;
+
+// Determine the lastMessageId from messages already rendered on the page
+let lastMessageId = 0;
+document.addEventListener('DOMContentLoaded', function() {
+    const existing = Array.from(document.querySelectorAll('#messages [data-message-id]')).map(el => parseInt(el.dataset.messageId || 0));
+    if (existing.length) {
+        lastMessageId = Math.max(...existing);
+    }
+});
+
+function appendMessage(m) {
+    const container = document.getElementById('messages');
+    const div = document.createElement('div');
+    const mid = m.id || '';
+    const created = m.created_at ? (new Date(m.created_at)).toLocaleString() : '';
+    div.setAttribute('data-message-id', mid);
+    div.innerHTML = `<strong>${m.sender}</strong>: ${m.text}${created ? `<br><small class="text-muted">${created}</small>` : ''}`;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    if (m.id) lastMessageId = Math.max(lastMessageId, m.id);
+}
+
+function deleteMessage(convoId, msgId) {
+    convoId = parseInt(convoId, 10) || 0;
+    msgId = parseInt(msgId, 10) || 0;
+    if (!convoId || !msgId) return alert('Invalid message id');
+    if (!confirm('Delete this message for everyone?')) return;
+    fetch(`/chat/conversation/${convoId}/message/${msgId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            const el = document.getElementById('message-' + msgId);
+            if (el) el.remove();
+        } else {
+            alert(data.error || 'Could not delete message');
+        }
+    }).catch(()=>{ alert('Request failed'); });
+}
+
+document.getElementById('sendForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const text = document.getElementById('messageText').value.trim();
+    if (!text) return;
+    fetch('{% url "chat:send_message" conversation.id %}', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({text})
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            appendMessage({id: data.id, sender: data.sender, text: data.text, created_at: data.created_at});
+            document.getElementById('messageText').value = '';
+        }
+    });
+});
+
+function poll() {
+    fetch('{% url "chat:fetch_messages" conversation.id %}?after=' + lastMessageId)
+        .then(r => r.json()).then(data => {
+            data.messages.forEach(m => {
+                // Only append messages with id greater than our current lastMessageId
+                if (!m.id || m.id > lastMessageId) {
+                    appendMessage(m);
+                }
+                lastMessageId = Math.max(lastMessageId, m.id || 0);
+            });
+        }).catch(()=>{});
+}
+
+setInterval(poll, 3000);
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// delegate delete button clicks to avoid inline JS with template tags
+document.getElementById('messages').addEventListener('click', function(e) {
+    const btn = e.target.closest('.delete-msg');
+    if (!btn) return;
+    const mid = btn.dataset.msgId;
+    const cid = btn.dataset.convoId;
+    deleteMessage(cid, mid);
+});
+
+poll();
+</script>
+{% endblock %}
+
+{% endblock %}

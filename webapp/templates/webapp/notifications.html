@@ -1,0 +1,75 @@
+{% extends 'webapp/modern-base.html' %}
+{% load static %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-card">
+        <h3><i class="fas fa-bell"></i> Notifications</h3>
+        {% if notifications %}
+            <ul class="list-group">
+                {% for n in notifications %}
+                    <li class="list-group-item d-flex justify-content-between align-items-start {% if n.unread %}fw-bold{% endif %}">
+                        <div>
+                            <div class="small text-muted">{{ n.created_at|date:'M d, Y H:i' }}</div>
+                            <div>{{ n.verb }}{% if n.message %}: {{ n.message }}{% endif %}</div>
+                        </div>
+                        <div class="btn-group">
+                            {% if n.url %}
+                                <a href="{{ n.url }}" class="btn btn-sm btn-primary">View</a>
+                            {% endif %}
+                            {% if n.unread %}
+                                <button class="btn btn-sm btn-outline-secondary mark-read-btn" data-notif-id="{{ n.id }}">Mark read</button>
+                            {% endif %}
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted">No notifications</p>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+function markRead(id, btn) {
+    fetch('{% url "webapp:mark_notification_read" 0 %}'.replace('/0/', '/' + id + '/'), {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    }).then(res => res.json()).then(data => {
+        if (data.success) {
+            btn.disabled = true;
+            btn.textContent = 'Read';
+            location.reload();
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.mark-read-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const id = this.dataset.notifId;
+            markRead(id, this);
+        });
+    });
+});
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}
+
+{% endblock %}

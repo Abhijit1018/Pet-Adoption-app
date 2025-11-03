@@ -16,14 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 
 # --- Add these two imports ---
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
+    # Backwards-compatible redirect: some links may point to /admin/start-chat/<id>/
+    # but Django's admin captures the 'admin/' space. Redirect here to the
+    # new application route which lives outside the admin namespace.
+    path('admin/start-chat/<int:user_id>/', lambda req, user_id: redirect('webapp:admin_start_chat', user_id=user_id)),
     path('admin/', admin.site.urls),
     path('', include('webapp.urls')),
+    path('chat/', include('chat.urls')),
 ]
 
 # --- Add this block at the end ---

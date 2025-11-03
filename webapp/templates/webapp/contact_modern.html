@@ -1,0 +1,35 @@
+{% extends 'webapp/modern-base.html' %}
+{% block title %}Contact{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Contact Us</h1>
+    {% if success %}
+        <div class="alert alert-success">Your message has been sent to the admin team. We'll get back to you shortly.</div>
+    {% elif error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <p>You can reach out to the admin team using the form below, or start a live chat with admins.</p>
+
+    <div class="mb-3">
+        <a href="{% url 'chat:start_with_admins' %}" class="btn btn-primary">Chat with Admins</a>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="name" class="form-label">Your name</label>
+            <input type="text" name="name" id="name" class="form-control" value="{{ name|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input type="email" name="email" id="email" class="form-control" value="{{ email|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
+            <label for="message" class="form-label">Message</label>
+            <textarea name="message" id="message" class="form-control" rows="5">{{ message|default_if_none:'' }}</textarea>
+        </div>
+        <button class="btn btn-primary" type="submit">Send message</button>
+    </form>
+</div>
+{% endblock %}
