@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -20,12 +21,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ei9ky@^x@eo-w-ok**0sblu6$!j!y=(*77ol7*q&ib_fbzveq1'
+# Read secrets from environment where available (safe for production)
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ei9ky@^x@eo-w-ok**0sblu6$!j!y=(*77ol7*q&ib_fbzveq1')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'testserver']
+# Hosts allowed to serve the app (comma-separated in env)
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',')
 
 
 # Application definition
@@ -43,6 +46,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise middleware serves static files in production without a separate server
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -117,6 +122,25 @@ DATABASES['chat_db'] = {
 DATABASE_ROUTERS = ['chat.db_routers.ChatRouter']
 
 
+# If a DATABASE_URL is provided in the environment (e.g. Render/Postgres),
+# prefer that configuration using dj-database-url. This keeps local dev using
+# the dynamic manager and preserves backwards compatibility.
+try:
+    import dj_database_url
+except Exception:
+    dj_database_url = None
+
+if dj_database_url and os.environ.get('DATABASE_URL'):
+    # Parse the DATABASE_URL and override default
+    parsed = dj_database_url.parse(os.environ.get('DATABASE_URL'))
+    DATABASES['default'] = parsed
+
+    # If a separate chat DB URL is provided, use it; otherwise reuse default
+    if os.environ.get('CHAT_DATABASE_URL'):
+        chat_parsed = dj_database_url.parse(os.environ.get('CHAT_DATABASE_URL'))
+        DATABASES['chat_db'] = chat_parsed
+
+
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
@@ -153,6 +177,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Use WhiteNoise storage for efficient static file serving in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
