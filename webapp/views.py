@@ -21,6 +21,88 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
 from django.conf import settings
+from django.views.decorators.http import require_http_methods
+from .models import Notification
+from django.contrib.auth.decorators import login_required
+from django.db.models import Count
+from django.shortcuts import redirect
+
+from chat.models import Conversation, ChatMember
+
+
+def about(request):
+    """About page for the site."""
+    return render(request, 'webapp/about_modern.html', {'page_title': 'About'})
+
+
+def contact(request):
+    """Contact page with a simple form to message admins.
+
+    On POST this will create a Notification for all admin users.
+    """
+    from django.contrib.auth import get_user_model
+    UserModel = get_user_model()
+    admins = UserModel.objects.filter(is_staff=True) | UserModel.objects.filter(is_superuser=True)
+    if request.method == 'POST':
+        name = request.POST.get('name') or (request.user.get_full_name() if request.user.is_authenticated else 'Anonymous')
+        email = request.POST.get('email') or (request.user.email if request.user.is_authenticated else '')
+        message = request.POST.get('message', '').strip()
+        if not message:
+            return render(request, 'webapp/contact_modern.html', {'error': 'Please enter a message.', 'page_title': 'Contact', 'name': name, 'email': email})
+        # Notify admins
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                actor=(request.user if request.user.is_authenticated else None),
+                verb='Contact form message',
+                message=f'Contact form from {name} ({email}): {message[:300]}',
+                url=''
+            )
+        return render(request, 'webapp/contact_modern.html', {'success': True, 'page_title': 'Contact'})
+    return render(request, 'webapp/contact_modern.html', {'page_title': 'Contact'})
+
+
+def privacy(request):
+    """Privacy policy page."""
+    return render(request, 'webapp/privacy_modern.html', {'page_title': 'Privacy Policy'})
+
+
+def terms(request):
+    """Terms and conditions page."""
+    return render(request, 'webapp/terms_modern.html', {'page_title': 'Terms and Conditions'})
+
+
+def admin_start_chat(request, user_id):
+    """Admin-only: start or return a conversation between admin team and the selected user."""
+    from django.http import HttpResponseForbidden
+    # Simple inline admin check to avoid decorator ordering issues
+    if not (request.user.is_authenticated and (hasattr(request.user, 'adminprofile') or request.user.is_staff or request.user.is_superuser)):
+        return HttpResponseForbidden('Admin access required')
+    from django.contrib.auth import get_user_model
+    UserModel = get_user_model()
+    target = get_object_or_404(UserModel, id=user_id)
+
+    # Collect admin ids (staff or superuser) and ensure the requesting admin is included
+    admin_qs = UserModel.objects.filter(is_staff=True) | UserModel.objects.filter(is_superuser=True)
+    admin_ids = list(admin_qs.values_list('id', flat=True))
+    # Ensure current admin included
+    if request.user.id not in admin_ids:
+        admin_ids.append(request.user.id)
+
+    # Build participant list: target user + admins
+    participant_ids = sorted(set([target.id] + admin_ids))
+
+    # Always create a fresh admin conversation so admins can start a new DM
+    # with the user even if previous admin chats exist.
+    chat_db = 'chat_db'
+    # include a timestamp suffix so subject is unique and easy to search
+    convo = Conversation.objects.using(chat_db).create(subject=f'Admin chat with {target.username} - {timezone.now().isoformat()}')
+
+    # Ensure ChatMember rows exist for all participants (use get_or_create to avoid UNIQUE errors)
+    for uid in participant_ids:
+        ChatMember.objects.using(chat_db).get_or_create(conversation_id=convo.id, user_id=uid)
+
+    return redirect('chat:conversation', convo_id=convo.id)
 
 def adoption_list(request):
     # Auto-move found pets to adoption after 15 days
@@ -40,6 +122,16 @@ def adoption_list(request):
         'page_title': 'Pets Available for Adoption'
     }
     # Render the pet_list.html template with the filtered pets
+    return render(request, 'webapp/pet_list_modern.html', context)
+
+
+def home(request):
+    """Home view that shows all pets regardless of status."""
+    pets = Pet.objects.select_related('owner').order_by('-date_added')
+    context = {
+        'pets': pets,
+        'page_title': 'All Pets'
+    }
     return render(request, 'webapp/pet_list_modern.html', context)
 
 # View for the Lost Pets page
@@ -213,6 +305,15 @@ def request_adoption(request, pet_id):
     if request.method == 'POST':
         message = request.POST.get('message', '')
         AdoptionRequest.objects.create(pet=pet, user=request.user, message=message)
+        # Notify pet owner (if set)
+        if pet.owner and pet.owner != request.user:
+            Notification.objects.create(
+                user=pet.owner,
+                actor=request.user,
+                verb='New adoption request',
+                message=f'{request.user.username} has requested to adopt {pet.name}.',
+                url=f"/pet/{pet.id}/"
+            )
         messages.success(request, 'Adoption request submitted!')
         return redirect('webapp:pet_detail', pet_id=pet.id)
     return render(request, 'webapp/request_adoption.html', {'pet': pet})
@@ -225,10 +326,26 @@ def manage_adoption_request(request, request_id, action):
         adoption_request.pet.status = 'adopted'
         adoption_request.pet.save()
         adoption_request.save()
+        # Notify requester about approval
+        Notification.objects.create(
+            user=adoption_request.user,
+            actor=request.user,
+            verb='Adoption request approved',
+            message=f'Your adoption request for {adoption_request.pet.name} was approved.',
+            url=f"/pet/{adoption_request.pet.id}/"
+        )
         messages.success(request, 'Adoption request approved!')
     elif action == 'reject':
         adoption_request.status = 'rejected'
         adoption_request.save()
+        # Notify requester about rejection
+        Notification.objects.create(
+            user=adoption_request.user,
+            actor=request.user,
+            verb='Adoption request rejected',
+            message=f'Your adoption request for {adoption_request.pet.name} was rejected.',
+            url=f"/pet/{adoption_request.pet.id}/"
+        )
         messages.info(request, 'Adoption request rejected.')
     return redirect('webapp:dashboard')
 
@@ -399,6 +516,21 @@ class CustomPasswordResetConfirmViewClass(PasswordResetConfirmView):
 def password_reset_complete(request):
     return render(request, 'webapp/password_reset_complete.html')
 
+
+@login_required
+def notifications_list(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:50]
+    return render(request, 'webapp/notifications.html', {'notifications': notifications})
+
+
+@login_required
+@require_http_methods(["POST"])
+def mark_notification_read(request, notification_id):
+    notif = get_object_or_404(Notification, id=notification_id, user=request.user)
+    notif.unread = False
+    notif.save()
+    return JsonResponse({'success': True})
+
 @login_required
 def redirect_to_register_pet(request):
     """Redirect old add-pet URL to new registration system"""
@@ -467,6 +599,14 @@ def approve_registration_request(request, request_id):
         pet = registration.approve(request.user, admin_notes)
         if pet:
             messages.success(request, f'Registration approved! Pet "{pet.name}" has been created and is now visible to users.')
+            # Notify requester
+            Notification.objects.create(
+                user=registration.user,
+                actor=request.user,
+                verb='Registration approved',
+                message=f'Your pet registration for "{registration.name}" was approved.',
+                url=f"/pet/{pet.id}/"
+            )
         else:
             messages.error(request, 'Failed to approve registration.')
     except Exception as e:
@@ -484,6 +624,14 @@ def reject_registration_request(request, request_id):
     try:
         registration.reject(request.user, admin_notes)
         messages.success(request, f'Registration for "{registration.name}" has been rejected.')
+        # Notify requester
+        Notification.objects.create(
+            user=registration.user,
+            actor=request.user,
+            verb='Registration rejected',
+            message=f'Your pet registration for "{registration.name}" was rejected.',
+            url=''
+        )
     except Exception as e:
         messages.error(request, f'Error rejecting registration: {str(e)}')
     

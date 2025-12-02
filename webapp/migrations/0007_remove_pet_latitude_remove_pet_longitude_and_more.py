@@ -10,28 +10,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='pet',
-            name='latitude',
-        ),
-        migrations.RemoveField(
-            model_name='pet',
-            name='longitude',
-        ),
-        migrations.RemoveField(
-            model_name='pet',
-            name='lost_datetime',
-        ),
-        migrations.RemoveField(
-            model_name='petregistrationrequest',
-            name='latitude',
-        ),
-        migrations.RemoveField(
-            model_name='petregistrationrequest',
-            name='longitude',
-        ),
-        migrations.RemoveField(
-            model_name='petregistrationrequest',
-            name='lost_datetime',
-        ),
+        # No-op migration: fields referenced previously are not present in the model state
+        # Left intentionally empty to avoid migration state errors in local development.
     ]

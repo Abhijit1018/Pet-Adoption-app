@@ -6,7 +6,8 @@ app_name = 'webapp'
 
 urlpatterns = [
     # Public pages
-    path('', views.adoption_list, name='adoption_list'),
+    path('', views.home, name='home'),
+    path('adoption/', views.adoption_list, name='adoption_list'),
     path('lost/', views.lost_list, name='lost_list'),
     path('found/', views.found_list, name='found_list'),
     path('pet/<int:pet_id>/', views.pet_detail, name='pet_detail'),
@@ -37,11 +38,20 @@ urlpatterns = [
     path('reject-registration/<int:request_id>/', views.reject_registration_request, name='reject_registration_request'),
     path('toggle-pet-status/<int:pet_id>/', views.toggle_pet_status, name='toggle_pet_status'),
     path('admin/run-auto-move/', views.run_auto_move_command, name='run_auto_move_command'),
+    path('about/', views.about, name='about'),
+    path('contact/', views.contact, name='contact'),
+    path('privacy/', views.privacy, name='privacy'),
+    path('terms/', views.terms, name='terms'),
+    # Avoid using the 'admin/' prefix to prevent collision with Django admin URLs
+    path('admin-chat/start/<int:user_id>/', views.admin_start_chat, name='admin_start_chat'),
     
     # Password Reset
     path('password-reset/', views.password_reset_request, name='password_reset'),
     path('password-reset-done/', views.password_reset_done, name='password_reset_done'),
     path('password-reset-confirm/<uidb64>/<token>/', views.CustomPasswordResetConfirmViewClass.as_view(), name='password_reset_confirm'),
     path('password-reset-complete/', views.password_reset_complete, name='password_reset_complete'),
+    # Notifications
+    path('notifications/', views.notifications_list, name='notifications'),
+    path('notifications/mark-read/<int:notification_id>/', views.mark_notification_read, name='mark_notification_read'),
 ]
 

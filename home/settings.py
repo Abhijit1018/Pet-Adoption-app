@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'webapp',
+    'chat',
 ]
 
 MIDDLEWARE = [
@@ -61,7 +62,8 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+                    'django.contrib.messages.context_processors.messages',
+                    'webapp.context_processors.notifications_processor',
             ],
         },
     },
@@ -104,6 +106,15 @@ DATABASES.update({
         },
     }
 })
+
+# Separate database for chat data
+DATABASES['chat_db'] = {
+    'ENGINE': 'django.db.backends.sqlite3',
+    'NAME': BASE_DIR / 'chat_db.sqlite3',
+}
+
+# Route chat app models to chat_db
+DATABASE_ROUTERS = ['chat.db_routers.ChatRouter']
 
 
 # Password validation

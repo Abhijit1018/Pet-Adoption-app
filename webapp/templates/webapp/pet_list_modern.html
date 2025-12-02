@@ -12,6 +12,7 @@
             {% if page_title == 'Found Pets' or page_title == 'Lost Pets' %}
                 <i class="fas fa-map-marker-alt header-icon me-2" aria-hidden="true" title="{{ page_title }}"></i>
             {% endif %}
+            <span class="site-punchline me-2 d-none d-md-inline">Find your new best friend —</span>
             <h1 class="hero-title mb-0">{{ page_title }}</h1>
             {# Subtitle appears inline on md+ and stacks on small screens #}
             <p class="hero-subtitle ms-3 mb-0 d-none d-md-block"> 
@@ -174,6 +175,7 @@
 /* Page header: icon + title horizontal layout */
 .page-header { display: flex; align-items: center; gap: 0.6rem; justify-content: flex-start; }
 .page-header .hero-title { font-size: 1.75rem; font-weight: 800; margin: 0; color: white; }
+.site-punchline { font-size: 1rem; font-weight: 600; color: rgba(255,255,255,0.95); }
 .hero-subtitle { margin-top: 0.4rem; color: rgba(255,255,255,0.95); }
 
 /* Icon styling and scoped colors for Found/Lost */
