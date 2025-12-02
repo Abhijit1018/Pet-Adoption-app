@@ -27,8 +27,28 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-ei9ky@^x@eo-w-ok**0sb
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
-# Hosts allowed to serve the app (comma-separated in env)
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',')
+# Hosts allowed to serve the app (comma-separated in env). Parse robustly
+# and include Render's external URL hostname when present.
+_allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver')
+ALLOWED_HOSTS = [h.strip() for h in _allowed_hosts_env.split(',') if h.strip()]
+
+# If Render provides RENDER_EXTERNAL_URL (full URL), extract hostname and
+# include it in ALLOWED_HOSTS so requests served from Render are accepted.
+_render_url = os.environ.get('RENDER_EXTERNAL_URL') or os.environ.get('RENDER_APP_HOSTNAME')
+if _render_url:
+    try:
+        from urllib.parse import urlparse
+        parsed = urlparse(_render_url)
+        host = parsed.netloc or parsed.path
+        if host:
+            host = host.split(':')[0]
+            if host not in ALLOWED_HOSTS:
+                ALLOWED_HOSTS.append(host)
+    except Exception:
+        # If parsing fails, still try to add the raw value if sensible
+        raw = _render_url.strip()
+        if raw and raw not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(raw)
 
 
 # Application definition
