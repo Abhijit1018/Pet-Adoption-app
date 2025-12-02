@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+.env/
+.env.*
+
+# Django
+*.log
+*.pot
+*.pyc
+*.pyo
+local_settings.py
+db.sqlite3
+chat_db.sqlite3
+media/
+/staticfiles/
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Pytest
+.pytest_cache/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# macOS
+*.DS_Store
+
+# Logs
+logs/
+
+# Render service files (if generated locally)
+render.yaml
+
+# Ignore compiled images/tools
+*.db
+*.sqlite
+
+# Ignore python-docx generated files
+PROJECT_DOCUMENTATION.docx
