@@ -211,7 +211,7 @@
                     
                     <td class="actions-cell">
                         <div class="action-buttons">
-                            <button onclick="viewUserDetails({{ user_profile.user.id }})" class="btn btn-ghost btn-sm" title="View Details">
+                            <button data-user-id="{{ user_profile.user.id }}" class="btn btn-ghost btn-sm view-details-btn" title="View Details">
                                 <i class="fas fa-eye"></i>
                             </button>
                             {% if user_profile.user != request.user %}
@@ -219,11 +219,11 @@
                                 <i class="fas fa-comments"></i>
                             </a>
                             {% endif %}
-                            <button onclick="contactUser('{{ user_profile.user.email }}')" class="btn btn-ghost btn-sm" title="Send Email">
+                            <button data-email="{{ user_profile.user.email }}" class="btn btn-ghost btn-sm contact-user-btn" title="Send Email">
                                 <i class="fas fa-envelope"></i>
                             </button>
                             {% if not user_profile.user.adminprofile and user_profile.user != request.user %}
-                            <button onclick="toggleUserStatus({{ user_profile.user.id }})" class="btn btn-ghost btn-sm" title="Toggle Status">
+                            <button data-user-id="{{ user_profile.user.id }}" class="btn btn-ghost btn-sm toggle-status-btn" title="Toggle Status">
                                 <i class="fas fa-toggle-on"></i>
                             </button>
                             {% endif %}
@@ -594,5 +594,31 @@ function exportUsers() {
     alert('Export users functionality would be implemented here');
     // This would generate and download a CSV/Excel file
 }
+
+// Delegated event handlers for buttons that use server-rendered data attributes
+document.addEventListener('click', function(e) {
+    const viewBtn = e.target.closest('.view-details-btn');
+    if (viewBtn) {
+        const id = viewBtn.dataset.userId;
+        viewUserDetails(id);
+        return;
+    }
+
+    const contactBtn = e.target.closest('.contact-user-btn');
+    if (contactBtn) {
+        const email = contactBtn.dataset.email;
+        contactUser(email);
+        return;
+    }
+
+    const toggleBtn = e.target.closest('.toggle-status-btn');
+    if (toggleBtn) {
+        const id = toggleBtn.dataset.userId;
+        if (confirm('Toggle user account status?')) {
+            toggleUserStatus(id);
+        }
+        return;
+    }
+});
 </script>
 {% endblock %}

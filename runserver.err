@@ -1,0 +1,7 @@
+INFO:webapp.database_manager:MySQL server is available and database is ready
+INFO:webapp.database_manager:Using MySQL database
+INFO:webapp.database_manager:MySQL server is available and database is ready
+INFO:webapp.database_manager:Using MySQL database
+INFO:django.utils.autoreload:Watching for file changes with StatReloader
+WARNING:django.security.csrf:Forbidden (CSRF cookie not set.): /login/
+[03/Dec/2025 00:00:13] "POST /login/ HTTP/1.1" 403 1367

@@ -43,7 +43,7 @@
 
 {% block extra_js %}
 <script>
-const convoId = parseInt('{{ conversation.id|default:'0' }}', 10) || 0;
+const convoId = parseInt("{{ conversation.id|default:'0' }}", 10) || 0;
 
 // Determine the lastMessageId from messages already rendered on the page
 let lastMessageId = 0;
