@@ -113,52 +113,48 @@ except ImportError:
         }
     }
 
-# Multi-database configuration for data synchronization
-DATABASES.update({
-    'sqlite_db': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    },
-    'mysql_db': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'pet_rescue_db',
-        'USER': 'root',
-        'PASSWORD': 'abhijit',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
-    }
-})
-
-# Separate database for chat data
-DATABASES['chat_db'] = {
-    'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': BASE_DIR / 'chat_db.sqlite3',
-}
-
-# Route chat app models to chat_db
-DATABASE_ROUTERS = ['chat.db_routers.ChatRouter']
-
-
-# If a DATABASE_URL is provided in the environment (e.g. Render/Postgres),
-# prefer that configuration using dj-database-url. This keeps local dev using
-# the dynamic manager and preserves backwards compatibility.
+# Prefer DATABASE_URL (Postgres) or MySQL settings provided via env vars.
+# Fall back to the dynamic db_manager or local sqlite when none provided.
 try:
     import dj_database_url
 except Exception:
     dj_database_url = None
 
+# If DATABASE_URL (recommended in production) is set, use it.
 if dj_database_url and os.environ.get('DATABASE_URL'):
-    # Parse the DATABASE_URL and override default
-    parsed = dj_database_url.parse(os.environ.get('DATABASE_URL'))
-    DATABASES['default'] = parsed
+    DATABASES['default'] = dj_database_url.parse(os.environ.get('DATABASE_URL'))
+else:
+    # Allow configuring a MySQL DB via environment variables (common on Render or other hosts)
+    MYSQL_NAME = os.environ.get('MYSQL_DATABASE') or os.environ.get('DB_NAME')
+    MYSQL_USER = os.environ.get('MYSQL_USER') or os.environ.get('DB_USER')
+    MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD') or os.environ.get('DB_PASSWORD')
+    MYSQL_HOST = os.environ.get('MYSQL_HOST') or os.environ.get('DB_HOST')
+    MYSQL_PORT = os.environ.get('MYSQL_PORT') or os.environ.get('DB_PORT')
 
-    # If a separate chat DB URL is provided, use it; otherwise reuse default
-    if os.environ.get('CHAT_DATABASE_URL'):
-        chat_parsed = dj_database_url.parse(os.environ.get('CHAT_DATABASE_URL'))
-        DATABASES['chat_db'] = chat_parsed
+    if MYSQL_NAME and MYSQL_USER is not None and MYSQL_PASSWORD is not None:
+        # Use MySQL as the default DB when credentials are provided
+        DATABASES['default'] = {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': MYSQL_NAME,
+            'USER': MYSQL_USER,
+            'PASSWORD': MYSQL_PASSWORD,
+            'HOST': MYSQL_HOST or '127.0.0.1',
+            'PORT': MYSQL_PORT or '3306',
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
+        }
+    # else: keep whatever DATABASES was set to earlier by db_manager or sqlite fallback
+
+# Configure chat DB: prefer CHAT_DATABASE_URL if provided, otherwise reuse default DB.
+if dj_database_url and os.environ.get('CHAT_DATABASE_URL'):
+    DATABASES['chat_db'] = dj_database_url.parse(os.environ.get('CHAT_DATABASE_URL'))
+else:
+    # Use the same DB as default for chat if not explicitly configured
+    DATABASES['chat_db'] = DATABASES.get('default')
+
+# Route chat app models to chat_db
+DATABASE_ROUTERS = ['chat.db_routers.ChatRouter']
 
 
 # Password validation
